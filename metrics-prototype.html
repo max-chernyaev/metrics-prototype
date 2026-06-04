@@ -1,0 +1,3514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1440" />
+<title>Corva — Metrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* ====================================================================
+     DESIGN TOKENS — pulled from Figma variable defs
+     ==================================================================== */
+  :root {
+    --bg-platform: #141414;
+    --bg-nav:      #191919;     /* palette/b3 */
+    --bg-card:     #212121;     /* black/900-b4 */
+    --bg-panel:    #2C2C2C;     /* black/860-b6 */
+
+    --text-primary:   #FFFFFF;
+    --text-secondary: #BDBDBD;  /* T6 */
+    --text-muted:     #808080;  /* T8 */
+
+    --accent:        #03BCD4;   /* primary/main, cyan */
+    --accent-16:     #03BCD429; /* primary/p16 */
+    --accent-12:     #03BCD41F; /* surface/tab/selected */
+    --teal:          #00D5BE;   /* drilling primary */
+
+    --success:       #75DB29;
+    --success-bg:    #75DB2929;
+    --warning:       #FFC107;
+    --warning-bg:    #FFC10729;
+    --error:         #FF4336;
+    --error-bg:      #FF433629;
+
+    --w4:  #FFFFFF0A;
+    --w8:  #FFFFFF14;
+    --w12: #FFFFFF1F;
+    --w16: #FFFFFF29;
+
+    --radius:    8px;
+    --radius-sm: 4px;
+
+    --shadow-card: 0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.1);
+    --shadow-pop:  0 8px 24px rgba(0,0,0,0.45);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg-platform);
+    color: var(--text-primary);
+    font-family: 'Roboto', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  button { font-family: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  svg { display: block; }
+
+  /* ====================================================================
+     APP LAYOUT
+     ==================================================================== */
+  body {
+    position: relative;
+    background:
+      radial-gradient(ellipse 700px 420px at -100px 600px, rgba(0,213,190,0.06), transparent 70%),
+      radial-gradient(ellipse 1100px 740px at calc(100% - 200px) -200px, rgba(3,188,212,0.07), transparent 70%),
+      var(--bg-platform);
+  }
+  .app {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Left vertical nav */
+  .leftnav {
+    width: 64px;
+    background: var(--bg-nav);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 4px;
+    border-right: 1px solid #00000040;
+  }
+  .leftnav .logo {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--teal), var(--accent));
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #001A1A; font-weight: 700; font-size: 14px;
+  }
+  .leftnav .nav-item {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary);
+  }
+  .leftnav .nav-item.active {
+    background: var(--accent-12);
+    color: var(--accent);
+  }
+  .leftnav .spacer { flex: 1; }
+
+  /* Main content area */
+  .main {
+    flex: 1;
+    padding: 24px 72px 24px 40px;
+    max-width: 1440px;
+  }
+
+  /* ====================================================================
+     TOP BAR — title + tabs + AI/chat
+     ==================================================================== */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 40px;
+    margin-bottom: 24px;
+  }
+  .topbar .title {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .top-tabs {
+    display: flex;
+    background: var(--w4);
+    border-radius: 8px;
+    padding: 4px;
+    gap: 2px;
+  }
+  .top-tabs .tab {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    height: 32px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    user-select: none;
+  }
+  .top-tabs .tab.active {
+    background: var(--accent-12);
+    color: var(--accent);
+  }
+  .topbar-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: var(--w8);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-primary);
+  }
+  .icon-btn.accent { color: var(--accent); }
+
+  /* ====================================================================
+     FILTERS ROW
+     ==================================================================== */
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .select {
+    flex: 1;
+    background: var(--w4);
+    border: 1px solid var(--w8);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-width: 160px;
+    max-width: 200px;
+    height: 52px;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
+  }
+  .select .label { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .select .value { font-size: 14px; line-height: 20px; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; }
+  .select .value::after {
+    content: ""; width: 8px; height: 8px;
+    border-right: 1.5px solid var(--text-secondary);
+    border-bottom: 1.5px solid var(--text-secondary);
+    transform: rotate(45deg);
+    margin-right: 4px;
+  }
+  .switches { display: flex; gap: 24px; padding-left: 8px; }
+  .switch {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .switch .toggle {
+    width: 32px; height: 16px;
+    background: var(--w16);
+    border-radius: 999px;
+    position: relative;
+  }
+  .switch .toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+  .switch.on .toggle { background: var(--accent-16); }
+  .switch.on .toggle::after { background: var(--accent); left: 18px; }
+
+  /* ====================================================================
+     NEWS RIBBON — clickable chips
+     ==================================================================== */
+  .news {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .news-chip {
+    background: var(--w4);
+    border: 1px solid var(--w8);
+    border-radius: 8px;
+    padding: 12px 16px;
+    height: 44px;
+    display: flex; align-items: center; gap: 6px;
+    /* Typography is intentionally constrained:
+       - all "label" text is 14px regular at 70% white
+       - all "value" text is 14px medium at 100% white (or sentiment color)
+       - all "meta" trailing text is 12px regular at 50% white  */
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: rgba(255,255,255,0.70);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    text-align: left;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .news-chip:active { transform: translateY(1px); }
+  .news-chip .ico {
+    width: 20px; height: 20px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-right: 2px;
+  }
+  /* Value: the headline number / status word */
+  .news-chip strong {
+    color: rgba(255,255,255,1);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  /* Meta: the trailing comparison or timestamp */
+  .news-chip .muted {
+    color: rgba(255,255,255,0.50);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+  }
+  /* Sentiment-colored value carries the same weight as a strong */
+  .news-chip .v-success { color: var(--success); font-weight: 500; }
+  .news-chip .v-warning { color: var(--warning); font-weight: 500; }
+  .news-chip .v-error   { color: var(--error);   font-weight: 500; }
+
+  /* Colored backgrounds at 16% — encode sentiment */
+  .news-chip.good {
+    background: var(--success-bg);
+    border-color: rgba(117,219,41,0.20);
+  }
+  .news-chip.good .ico { color: var(--success); }
+  .news-chip.good:hover { background: rgba(117,219,41,0.22); border-color: rgba(117,219,41,0.32); }
+
+  .news-chip.warn {
+    background: var(--warning-bg);
+    border-color: rgba(255,193,7,0.20);
+  }
+  .news-chip.warn .ico { color: var(--warning); }
+  .news-chip.warn:hover { background: rgba(255,193,7,0.22); border-color: rgba(255,193,7,0.32); }
+
+  .news-chip.bad {
+    background: var(--error-bg);
+    border-color: rgba(255,67,54,0.20);
+  }
+  .news-chip.bad .ico { color: var(--error); }
+  .news-chip.bad:hover { background: rgba(255,67,54,0.22); border-color: rgba(255,67,54,0.32); }
+
+  /* ====================================================================
+     ROW: FLEET SCORE / TIME&COST / RANKING (3 cards)
+     ==================================================================== */
+  .cards-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--w4);
+    border: 1px solid var(--w8);
+    border-radius: 12px;
+    padding: 16px 24px 24px;
+    position: relative;
+  }
+  .card-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 16px; font-weight: 500; line-height: 24px;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+  .card-title .ico { color: var(--text-secondary); width: 20px; height: 20px; display: inline-flex; }
+  /* Spacer in card-title to push trailing actions (like the variant
+     toggle) to the right edge of the card header */
+  .card-title .spacer { flex: 1; }
+  .card-action-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .card-action-btn:hover { background: var(--w8); color: var(--text-primary); }
+
+  /* ----- Menu trigger button (with text + chevron) ------------------ */
+  .menu-anchor { position: relative; display: inline-flex; }
+  .menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 8px 0 12px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--w8);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 20px;
+    font-family: inherit;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .menu-trigger:hover { background: var(--w12); }
+  .menu-trigger .chev {
+    color: var(--text-secondary);
+    width: 16px; height: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  /* Icon-only variant for the Sort trigger */
+  .menu-trigger.menu-trigger-icon {
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+    color: var(--text-secondary);
+  }
+  .menu-trigger.menu-trigger-icon:hover { color: var(--text-primary); }
+
+  /* ----- Dropdown menu --------------------------------------------- */
+  .menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 160px;
+    background: var(--bg-panel);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    padding: 4px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu[hidden] { display: none; }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 20px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 6px;
+    text-align: left;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .menu-item:hover { background: var(--w8); }
+  .menu-item.active {
+    background: var(--accent-12);
+    color: var(--accent);
+  }
+  .card-divider {
+    height: 1px;
+    background: var(--w8);
+    margin: 16px 0;
+  }
+
+  /* ----- Fleet Score -----
+     Layout: card-title pinned to top, fs-bottom pinned to bottom,
+             fs-top floats vertically centered in remaining space. */
+  .card.fleet-score-card {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  .fleet-score-card .fs-top {
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    border-radius: 10px;
+    align-self: center;
+    background: var(--w4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    text-align: left;
+  }
+  .fleet-score-card .fs-top:hover { background: var(--w8); }
+  .fleet-score-card .fs-top:active { transform: translateY(1px); }
+
+  .fs-left { display: flex; flex-direction: column; gap: 0; }
+  .fs-bignum {
+    font-size: 72px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text-primary);
+    letter-spacing: -2px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  /* Reset letter-spacing on the smaller siblings so spaces between
+     "+", "4", "pts" render with normal kerning */
+  .fs-bignum .pct {
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 2px;
+    letter-spacing: 0;
+  }
+  .fs-bignum .delta {
+    font-size: 18px;
+    color: var(--success);
+    margin-left: 16px;
+    font-weight: 400;
+    align-self: flex-end;
+    transform: translateY(-8px);
+    letter-spacing: 0;
+  }
+  .fs-sub   { color: var(--text-secondary); font-size: 14px; margin-top: 8px; }
+  .fs-sub-2 { color: var(--text-muted); font-size: 12px; }
+  .fs-spark {
+    width: 170px; height: 80px;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+  .fs-section-title {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .fs-sections {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  .fs-section {
+    background: var(--w4);
+    border-radius: 6px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    border: 1px solid transparent;
+  }
+  .fs-section:hover { background: var(--w8); transform: translateY(-1px); }
+  .fs-section .name { color: var(--text-secondary); font-size: 12px; margin-bottom: 4px; }
+  .fs-section .val { font-size: 16px; font-weight: 500; }
+  .fs-section.s-red    .val { color: var(--error); }
+  .fs-section.s-yellow .val { color: var(--warning); }
+  .fs-section.s-green  .val { color: var(--success); }
+  .fs-section.s-red    { background: var(--error-bg); border-color: rgba(255,67,54,0.15); }
+  .fs-section.s-yellow { background: var(--warning-bg); border-color: rgba(255,193,7,0.15); }
+  .fs-section.s-green  { background: var(--success-bg); border-color: rgba(117,219,41,0.15); }
+  .legend {
+    display: flex; gap: 16px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+  /* ----- Time & Cost -----
+     Each block stretches full content width and gets a subtle tile
+     background, matching the Fleet Score hero pattern. */
+  .tc-block {
+    cursor: pointer;
+    padding: 12px 16px;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 10px;
+    background: var(--w4);
+    color: inherit;
+    text-align: left;
+    transition: background 0.15s, transform 0.15s;
+    display: block;
+  }
+  .tc-block:hover  { background: var(--w8); }
+  .tc-block:active { transform: translateY(1px); }
+  .tc-block + .tc-block { margin-top: 12px; }
+
+  .tc-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .tc-label { color: var(--text-secondary); font-size: 16px; line-height: 28px; }
+  .tc-value { font-size: 24px; font-weight: 500; color: var(--text-primary); }
+  .tc-value.warning { color: var(--warning); }
+
+  /* Dual-value group: a big primary number with a smaller muted
+     secondary value below. Used in both variants. */
+  .tc-value-group { display: flex; flex-direction: column; align-items: flex-end; gap: 0; }
+  .tc-value-primary {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 28px;
+    color: var(--text-primary);
+  }
+  .tc-value-primary.warning { color: var(--warning); }
+  .tc-value-primary.success { color: var(--success); }
+  .tc-value-secondary {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  /* ---------- Variant B: combined block with stacked bar ----------- */
+  .tc-halves {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tc-half {
+    background: var(--w4);
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+  }
+  .tc-half:hover  { background: var(--w8); }
+  .tc-half:active { transform: translateY(1px); }
+  .tc-half::before {
+    content: "";
+    position: absolute; left: 0; top: 10px; bottom: 10px;
+    width: 2px; border-radius: 2px;
+  }
+  .tc-half-captured::before { background: var(--success); }
+  .tc-half-potential::before { background: var(--warning); }
+  .tc-half-label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+    padding-left: 10px;
+  }
+  .tc-half .tc-value-group { align-items: flex-start; padding-left: 10px; }
+
+  /* Stacked bar: two coloured segments share a single 8px-tall track. */
+  .tc-stacked {
+    display: flex;
+    height: 8px;
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--w8);
+    margin: 4px 0 8px;
+  }
+  .tc-stacked > div { height: 100%; }
+  .tc-total-line {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .tc-bar {
+    height: 4px;
+    background: var(--w12);
+    border-radius: 4px;
+    margin: 12px 0 8px;
+    overflow: hidden;
+    display: flex;
+  }
+  .tc-bar > div { height: 100%; border-radius: 4px; }
+  /* The "potential" bar fills from the right side so that, together
+     with the "captured" bar (which fills from the left), the two read
+     as one continuous 0→100% line — captured anchored at the left edge,
+     potential anchored at the right. */
+  .tc-bar.from-right { justify-content: flex-end; }
+
+  .tc-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-muted);
+  }
+  .tc-meta > span { min-width: 0; }
+  .tc-meta > span:last-child { flex-shrink: 0; white-space: nowrap; }
+
+  .opp-title { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+  .opp-list { display: flex; flex-direction: column; gap: 8px; }
+  .opp-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 60px;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  .opp-row:hover { background: var(--w4); }
+  .opp-row .opp-name { color: var(--text-secondary); font-size: 14px; }
+  .opp-row .opp-bar { height: 4px; background: var(--w8); border-radius: 4px; overflow: hidden; }
+  .opp-row .opp-bar > div { height: 100%; border-radius: 4px; }
+  .opp-row .opp-val { font-size: 14px; text-align: right; font-weight: 500; }
+  .opp-row.s-red    .opp-bar > div { background: var(--error); }
+  .opp-row.s-red    .opp-val { color: var(--error); }
+  .opp-row.s-yellow .opp-bar > div { background: var(--warning); }
+  .opp-row.s-yellow .opp-val { color: var(--warning); }
+  .opp-row.s-green  .opp-bar > div { background: var(--success); }
+  .opp-row.s-green  .opp-val { color: var(--success); }
+
+  /* ----- Ranking -----
+     Card stretches list to fill vertical space, distributing rows evenly.
+     Horizontal grid is tightened to give names more room. */
+  .card.ranking-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .ranking-card .rank-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* Fixed gap approximates the visual spacing of the full 10-rig
+       layout — but stays stable when only a few rigs are visible.
+       Rows always align to the top; any leftover space sits below. */
+    gap: 20px;
+  }
+  .rank-row {
+    display: grid;
+    /* num · name (FIXED 110) · bar (flex) · % · arrow · chip
+       Name shrank to 110px to give the progress bar roughly 2× the
+       width. Longer names truncate with an ellipsis. */
+    grid-template-columns: 16px 110px 1fr 40px 16px 64px;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    /* Buttons default to text-align: center — force left for the row
+       so the name aligns to the left edge of its column. */
+    text-align: left;
+    transition: background 0.15s;
+  }
+  .rank-row:hover { background: var(--w4); }
+  .rank-row .rank-num { color: var(--text-muted); font-size: 12px; text-align: center; }
+  .rank-row .rank-name { color: var(--text-primary); font-size: 14px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-row .rank-bar { height: 4px; background: var(--w8); border-radius: 4px; overflow: hidden; }
+  .rank-row .rank-bar > div { height: 100%; border-radius: 4px; }
+  .rank-row .rank-pct { font-size: 14px; font-weight: 500; text-align: right; }
+  .rank-row .rank-arrow { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; }
+  .rank-row.s-red    .rank-bar > div { background: var(--error); }   .rank-row.s-red    .rank-pct { color: var(--error); }
+  .rank-row.s-yellow .rank-bar > div { background: var(--warning); } .rank-row.s-yellow .rank-pct { color: var(--warning); }
+  .rank-row.s-green  .rank-bar > div { background: var(--success); } .rank-row.s-green  .rank-pct { color: var(--success); }
+
+  .chip {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    height: 22px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+    font-weight: 400;
+  }
+  .chip.red    { background: var(--error-bg);   color: var(--error); }
+  .chip.yellow { background: var(--warning-bg); color: var(--warning); }
+  .chip.green  { background: var(--success-bg); color: var(--success); }
+  .chip.accent { background: var(--accent-16);  color: var(--accent); }
+  .chip.muted  { background: var(--w8);         color: var(--text-secondary); }
+
+  /* ====================================================================
+     PERFORMANCE GAPS (heatmap)
+     ==================================================================== */
+  .gaps-card { padding: 16px 24px 24px; }
+  .gaps-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(6, 1fr);
+    gap: 8px;
+    align-items: center;
+  }
+  .gaps-grid .col-head {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding-bottom: 4px;
+  }
+  .gaps-grid .row-head {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+  .gap-cell {
+    height: 36px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    border: 1px solid transparent;
+  }
+  /* Base + hover backgrounds: bump fill ~50% on hover so the cell
+     stands out clearly under the cursor. */
+  .gap-cell.empty    { background: rgba(117,219,41,0.10); }
+  .gap-cell.empty:hover    { background: rgba(117,219,41,0.20); }
+  .gap-cell.s-green  { background: rgba(117,219,41,0.16); color: var(--success); }
+  .gap-cell.s-green:hover  { background: rgba(117,219,41,0.28); }
+  .gap-cell.s-yellow { background: rgba(255,193,7,0.18);  color: var(--warning); }
+  .gap-cell.s-yellow:hover { background: rgba(255,193,7,0.32); }
+  .gap-cell.s-red    { background: rgba(255,67,54,0.18);  color: var(--error); }
+  .gap-cell.s-red:hover    { background: rgba(255,67,54,0.32); }
+  .gap-cell:hover    { transform: translateY(-1px); border-color: var(--w16); }
+
+  /* ====================================================================
+     TOP ACTIONS + INSIGHTS placeholder
+     ==================================================================== */
+  .cards-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .action-list { display: flex; flex-direction: column; gap: 8px; }
+  .action-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: grid;
+    grid-template-columns: 24px 1fr auto auto 36px;
+    gap: 16px;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    border: 0;
+    font-family: inherit;
+    width: 100%;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .action-card:hover  { background: #262626; }
+  .action-card:active { transform: translateY(1px); }
+  .action-card::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px;
+    border-radius: 8px 0 0 8px;
+  }
+  .action-card.s-red::before    { background: var(--error); }
+  .action-card.s-yellow::before { background: var(--warning); }
+  .action-card .severity {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .action-card.s-red .severity    { color: var(--error); }
+  .action-card.s-yellow .severity { color: var(--warning); }
+  .action-card .ac-name { font-size: 14px; color: var(--text-primary); }
+  .action-card .ac-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .action-card .ac-potential { font-size: 12px; color: var(--text-secondary); }
+  .action-card .ac-potential .amt { color: var(--error); font-weight: 500; }
+  .action-card .ac-time { color: var(--text-muted); font-size: 12px; }
+  /* ac-improve is now a decorative affordance — the whole card is the
+     click target; the panel that opens contains the real "Improve" CTA */
+  .action-card .ac-improve {
+    width: 36px; height: 36px;
+    background: var(--accent-16);
+    border-radius: 8px;
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .action-card:hover .ac-improve { background: rgba(3,188,212,0.30); }
+
+  .insights-empty {
+    border: 1px dashed var(--w16);
+    border-radius: 12px;
+    min-height: 200px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* Card summary line — sits under .card-title for cards that need a
+     short subtitle (e.g., "Improvements" widget). */
+  .card-summary {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+    margin-top: -8px;
+    margin-bottom: 12px;
+  }
+  .card-summary .v-success { color: var(--success); font-weight: 500; }
+  .card-summary .v-warning { color: var(--warning); font-weight: 500; }
+  .card-summary .v-muted   { color: var(--text-muted); }
+
+  /* Improvements list uses .action-card under the hood. The status chip
+     replaces the "time" cell in the grid. */
+  .action-card .chip {
+    justify-self: end;
+  }
+
+  /* ====================================================================
+     RIGHT PANEL
+     ==================================================================== */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.32);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 100;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .panel {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: 360px;
+    background: var(--bg-panel);
+    border-radius: 12px;
+    box-shadow: var(--shadow-pop);
+    /* calc(100% + 32px) hides the panel regardless of width (360 or 720) */
+    transform: translateX(calc(100% + 32px));
+    transition: transform 0.25s ease;
+    z-index: 101;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel.open { transform: translateX(0); }
+  /* Wide mode for the Compare panel — needs more horizontal room
+     for the KPI × Rig matrix. */
+  .panel[data-mode="wide"] {
+    width: 720px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .panel-header {
+    background: var(--bg-panel);
+    border-bottom: 2px solid var(--bg-card);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .panel-breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .panel-breadcrumb .crumb {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .panel-breadcrumb .crumb:hover { color: var(--text-primary); text-decoration: underline; }
+  .panel-breadcrumb .sep { color: var(--text-muted); font-weight: 400; }
+  .panel-breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+  .panel-close {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .panel-close:hover { background: var(--w8); color: var(--text-primary); }
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .panel-body::-webkit-scrollbar { width: 6px; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--w16); border-radius: 3px; }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .f-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    transition: background 0.15s;
+  }
+  .f-chip.active     { background: var(--error-bg);   color: var(--error); }
+  .f-chip.active.acc { background: var(--accent-16); color: var(--accent); }
+  .f-chip.active.warn{ background: var(--warning-bg); color: var(--warning); }
+  .f-chip.active.suc { background: var(--success-bg); color: var(--success); }
+  .f-chip.off        { background: transparent; color: var(--text-secondary); border-color: var(--w12); }
+  .f-chip.off:hover  { background: var(--w8); color: var(--text-primary); }
+  .f-chip .x {
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    padding: 0 2px;
+    margin-left: 2px;
+    font: inherit;
+    line-height: 1;
+    border-radius: 3px;
+    transition: background 0.12s, opacity 0.12s;
+  }
+  .f-chip .x:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .panel-section-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* Cards used inside the right panel */
+  .p-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .p-card:hover { background: #262626; }
+  .p-card.s-red::before    { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--error);   border-radius: 8px 0 0 8px; }
+  .p-card.s-yellow::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--warning); border-radius: 8px 0 0 8px; }
+  .p-card.s-green::before  { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--success); border-radius: 8px 0 0 8px; }
+
+  .p-card-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 8px;
+  }
+  .p-card-name {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 20px;
+  }
+  .p-card-sub {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .p-card .chev {
+    color: var(--text-secondary);
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* Big from→to score row */
+  .delta-row {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 12px;
+  }
+  .delta-from {
+    font-size: 18px; font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: line-through;
+  }
+  .delta-arrow { color: var(--text-secondary); }
+  .delta-to { font-size: 18px; font-weight: 500; }
+  .delta-to.red    { color: var(--error); }
+  .delta-to.yellow { color: var(--warning); }
+  .delta-to.green  { color: var(--success); }
+  .delta-chip { margin-left: auto; }
+
+  /* Inner KPI card (matches Figma KPI card component) */
+  .kpi-card {
+    margin-top: 12px;
+    background: var(--bg-nav);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .kpi-card:hover { background: #1f1f1f; }
+  .kpi-name { font-size: 14px; color: var(--text-primary); }
+  .kpi-group { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .kpi-right { display: flex; align-items: center; gap: 12px; }
+  .kpi-value {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 22px;
+  }
+  .kpi-value.red    { color: var(--error); }
+  .kpi-value.yellow { color: var(--warning); }
+  .kpi-value.green  { color: var(--success); }
+  .kpi-actual { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .kpi-actual .muted { color: var(--text-muted); }
+  .kpi-improve {
+    width: 32px; height: 32px;
+    background: var(--accent-16);
+    border-radius: 8px;
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .kpi-improve:hover { background: rgba(3,188,212,0.30); }
+
+  /* Rig card in lists */
+  .rig-card {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    gap: 12px;
+  }
+  .rig-card:hover { background: #262626; }
+  .rig-card.s-red::before    { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--error);   border-radius: 8px 0 0 8px; }
+  .rig-card.s-yellow::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--warning); border-radius: 8px 0 0 8px; }
+  .rig-card.s-green::before  { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--success); border-radius: 8px 0 0 8px; }
+  .rig-card .rig-meta { display: flex; flex-direction: column; min-width: 0; }
+  .rig-card .rig-name { font-size: 14px; color: var(--text-primary); }
+  .rig-card .rig-sub  { font-size: 12px; color: var(--text-muted); }
+  .rig-card .rig-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .rig-card .rig-pct  { font-size: 16px; line-height: 22px; font-weight: 400; }
+  .rig-card.s-red .rig-pct    { color: var(--error); }
+  .rig-card.s-yellow .rig-pct { color: var(--warning); }
+  .rig-card.s-green .rig-pct  { color: var(--success); }
+
+  /* Trend block */
+  .trend-block { background: var(--bg-card); border-radius: 8px; padding: 16px; }
+  .trend-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+  .trend-bars { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+  .trend-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 8px; }
+  .trend-bar.r { background: var(--error); }
+  .trend-bar.y { background: var(--warning); }
+  .trend-bar.g { background: var(--success); }
+  .trend-axis {
+    display: flex; justify-content: space-between;
+    margin-top: 8px;
+    color: var(--text-muted); font-size: 11px;
+  }
+
+  /* KPI hero (big numbers) */
+  .kpi-hero {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+  }
+  .kpi-hero.s-red::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--error); border-radius: 8px 0 0 8px; }
+  .kpi-hero-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: start; }
+  .kpi-hero-col { display: flex; flex-direction: column; gap: 2px; }
+  .kpi-hero-label { font-size: 12px; color: var(--text-muted); }
+  .kpi-hero-val   { font-size: 28px; font-weight: 500; color: var(--text-primary); line-height: 32px; }
+  .kpi-hero-val.red    { color: var(--error); }
+  .kpi-hero-val.yellow { color: var(--warning); }
+  .kpi-hero-val.green  { color: var(--success); }
+  .kpi-hero-unit  { font-size: 12px; color: var(--text-muted); }
+
+  .improve-btn {
+    margin-top: 16px;
+    width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    height: 40px;
+    background: var(--accent-16);
+    color: var(--accent);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .improve-btn:hover { background: rgba(3,188,212,0.30); }
+  .improve-btn.success { background: var(--success-bg); color: var(--success); cursor: default; }
+
+  /* COMPARE button — full-width, centered. 32px icon with 6px clearance
+     on top and bottom = 44px total height. */
+  .compare-btn {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 44px;
+    padding: 6px 16px;
+    background: var(--accent-16);
+    color: var(--accent);
+    border: 0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+  .compare-btn:hover { background: rgba(3,188,212,0.30); }
+  .compare-btn svg { width: 32px; height: 32px; flex-shrink: 0; }
+
+  /* Rig comparison strip: a horizontal track with three dots —
+     You / Fleet avg / Best rig — positioned by % score. Lives
+     inside the kpi-hero on the Rig panel. */
+  .rig-compare {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--w8);
+  }
+  .rig-compare-track {
+    position: relative;
+    height: 40px;
+    margin: 4px 12px 28px;
+  }
+  .rig-compare-bar {
+    position: absolute;
+    top: 18px;
+    left: 0; right: 0;
+    height: 4px;
+    background: var(--w12);
+    border-radius: 2px;
+  }
+  .rig-compare-dot {
+    position: absolute;
+    top: 12px;
+    transform: translateX(-50%);
+  }
+  .rig-compare-dot .pin {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-panel);
+    box-shadow: 0 0 0 1px var(--w12);
+  }
+  .rig-compare-dot .lbl {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 22px;
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .rig-compare-dot.you  .pin { background: var(--text-primary); }
+  .rig-compare-dot.you.s-red    .pin { background: var(--error); }
+  .rig-compare-dot.you.s-yellow .pin { background: var(--warning); }
+  .rig-compare-dot.you.s-green  .pin { background: var(--success); }
+  .rig-compare-dot.avg  .pin { background: var(--text-secondary); }
+  .rig-compare-dot.best .pin { background: var(--success); }
+  .rig-compare-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .rig-compare-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+  .rig-compare-legend .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ----- Compare panel: filters + matrix ---------------------------
+     Filters reuse the page-level .select style so the Compare panel
+     looks like a continuation of the main page toolbar. */
+  .compare-filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--w8);
+    margin-bottom: 4px;
+  }
+  .cmp-select {
+    flex: 1;
+    background: var(--w4);
+    border: 1px solid var(--w8);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-width: 140px;
+    height: 52px;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .cmp-select:hover { background: var(--w8); border-color: var(--w16); }
+  .cmp-select-label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-muted);
+  }
+  .cmp-select-value {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-primary);
+    margin-top: 2px;
+  }
+  .cmp-select-value .chev {
+    width: 16px; height: 16px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  /* The selector's dropdown menu drops below the entire selector */
+  .cmp-select .menu {
+    top: calc(100% + 4px);
+    left: 0;
+    right: auto;
+    min-width: 100%;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  /* Multi-select menu item with a checkbox */
+  .menu-item.checkable {
+    padding-left: 10px;
+  }
+  .menu-item .mi-checkbox {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 3px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .menu-item.selected .mi-checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .menu-item.selected .mi-checkbox::after {
+    content: "";
+    position: absolute;
+    left: 4px; top: 0;
+    width: 4px; height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  /* Mini compare button for the Ranking widget header */
+  .compare-mini {
+    display: inline-flex; align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    background: var(--accent-16);
+    color: var(--accent);
+    border: 0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .compare-mini:hover { background: rgba(3,188,212,0.30); }
+  .compare-mini svg { width: 16px; height: 16px; }
+
+  /* Matrix layout: row-headers on the left, KPI columns to the right.
+     --cols set inline by the renderer based on number of selected KPIs. */
+  .compare-matrix-wrap {
+    overflow-x: auto;
+    margin: 0 -4px;
+    padding: 0 4px;
+  }
+  .compare-matrix {
+    display: grid;
+    grid-template-columns: 140px repeat(var(--cols, 3), minmax(120px, 1fr));
+    gap: 6px;
+    align-items: stretch;
+    min-width: max-content;
+  }
+
+  /* Column header (KPI name) */
+  .compare-col-head {
+    padding: 4px 4px 8px;
+    align-self: end;
+  }
+  .compare-col-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+    line-height: 18px;
+  }
+  .compare-col-group {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Row header (rig name) */
+  .compare-row-head {
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .compare-rig-name {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .compare-rig-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Cell — clickable button with score, actual, mini bar */
+  .compare-cell {
+    background: var(--bg-card);
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    display: flex; flex-direction: column;
+    gap: 4px;
+    position: relative;
+    transition: background 0.15s, transform 0.15s;
+    min-height: 56px;
+  }
+  .compare-cell:hover  { background: #2a2a2a; }
+  .compare-cell:active { transform: translateY(1px); }
+  .compare-cell.empty {
+    background: transparent;
+    cursor: default;
+  }
+
+  .compare-cell .cell-score {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+  .compare-cell.s-red    .cell-score { color: var(--error); }
+  .compare-cell.s-yellow .cell-score { color: var(--warning); }
+  .compare-cell.s-green  .cell-score { color: var(--success); }
+  .compare-cell .cell-actual {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 16px;
+  }
+  .compare-cell .cell-actual .unit { color: var(--text-muted); }
+  .compare-cell .cell-bar {
+    height: 4px;
+    background: var(--w8);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+  .compare-cell .cell-bar > div {
+    height: 100%; border-radius: 4px;
+  }
+  .compare-cell.s-red    .cell-bar > div { background: var(--error); }
+  .compare-cell.s-yellow .cell-bar > div { background: var(--warning); }
+  .compare-cell.s-green  .cell-bar > div { background: var(--success); }
+
+  .compare-cell.empty .cell-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+    align-self: center;
+    justify-self: center;
+    margin: auto;
+  }
+
+  /* List header (e.g., "3 new this week") */
+  .panel-list-head {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* Section breakdown row (inside Rig panel) */
+  .section-group-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 8px 0 4px;
+  }
+
+  /* ====================================================================
+     SVG ICON STYLES
+     ==================================================================== */
+  .svg-ico { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
+  .svg-ico-20 { width: 20px; height: 20px; }
+
+  /* ====================================================================
+     TOOLTIPS
+     #414141 @ 70% opacity, backdrop blur, rich content.
+     ==================================================================== */
+  .tooltip {
+    position: fixed;
+    background: rgba(65, 65, 65, 0.7);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    color: var(--text-primary);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 18px;
+    max-width: 280px;
+    min-width: 160px;
+    z-index: 200;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip[hidden] { display: none; }
+  .tip-title {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .tip-row {
+    display: flex; align-items: center;
+    gap: 6px;
+    line-height: 20px;
+  }
+  .tip-row + .tip-row { margin-top: 2px; }
+  .tip-row .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tip-row .label {
+    color: rgba(255,255,255,0.75);
+    font-size: 13px;
+  }
+  .tip-row .value {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 13px;
+  }
+  .tip-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.12);
+    margin: 8px -2px 6px;
+  }
+  .tip-hint {
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  /* ====================================================================
+     PANEL ENTRY ANIMATION FOR INNER CONTENT
+     ==================================================================== */
+  .panel-body > * { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================================================================
+     INLINE ICON SVGS (used via <use> for reuse, but we just inline)
+     ====================================================================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-trend-up" viewBox="0 0 20 20"><path d="M3 14l5-5 3 3 6-7" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 5h4v4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-trend-down" viewBox="0 0 20 20"><path d="M3 6l5 5 3-3 6 7" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 15h4v-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-arrow-down" viewBox="0 0 16 16"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-arrow-up" viewBox="0 0 16 16"><path d="M8 13V3M4 7l4-4 4 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-arrow-right" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-warning" viewBox="0 0 20 20"><path d="M10 2L18 17H2L10 2z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M10 8v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14.5" r="0.7" fill="currentColor"/></symbol>
+    <symbol id="ic-dollar" viewBox="0 0 20 20"><path d="M10 3v14M13 6.5C13 5.12 11.66 4 10 4S7 5.12 7 6.5 8.34 9 10 9s3 1.12 3 2.5S11.66 14 10 14s-3-1.12-3-2.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="ic-cup" viewBox="0 0 20 20"><path d="M6 3h8v4a4 4 0 11-8 0V3z" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M14 4h2a2 2 0 010 4h-2M6 4H4a2 2 0 000 4h2M8 13v3h4v-3M6 16h8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="ic-bars" viewBox="0 0 20 20"><rect x="3"  y="10" width="3" height="7" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="8.5" y="6"  width="3" height="11" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="14" y="3"  width="3" height="14" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="ic-alarm" viewBox="0 0 20 20"><circle cx="10" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 7v4l2.5 2M4 4l3 3M16 4l-3 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="ic-bell" viewBox="0 0 20 20"><path d="M10 2v1M5 8a5 5 0 0110 0v3l2 3H3l2-3V8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 17a2 2 0 004 0" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="ic-grid" viewBox="0 0 20 20"><rect x="3" y="3"  width="6" height="6" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="11" y="3" width="6" height="6" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="3" y="11" width="6" height="6" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="11" y="11" width="6" height="6" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="ic-book" viewBox="0 0 20 20"><path d="M4 3h12v14H4V3z" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M7 7h6M7 11h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-search" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-bag" viewBox="0 0 20 20"><path d="M3 7h14l-1.5 9H4.5L3 7zM7 7V4a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="ic-flag" viewBox="0 0 20 20"><path d="M5 17V3M5 4h11l-2 4 2 4H5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-chart" viewBox="0 0 20 20"><path d="M3 17h14M5 13v3M9 9v7M13 5v11M17 3v13" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="ic-overview" viewBox="0 0 20 20"><path d="M3 12a7 7 0 0114 0H3z" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 12L13 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-imp" viewBox="0 0 20 20"><path d="M3 11l4 4 10-10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="15" cy="5" r="2" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="ic-target" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="10" cy="10" r="1" fill="currentColor"/></symbol>
+    <symbol id="ic-rig" viewBox="0 0 20 20"><path d="M10 2v3M7 5h6l-2 13H9L7 5z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M5 18h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-close" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="ic-spark" viewBox="0 0 20 20"><path d="M10 2l2 5 5 1-4 4 1 6-4-3-4 3 1-6-4-4 5-1 2-5z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></symbol>
+    <!-- A single bar on top + two halves underneath: suggests
+         "swap between single-row view and split view". -->
+    <symbol id="ic-toggle-view" viewBox="0 0 20 20">
+      <rect x="3" y="3" width="14" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <rect x="3" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      <rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+    </symbol>
+    <!-- Chevron-down for dropdown buttons -->
+    <symbol id="ic-chev-down" viewBox="0 0 16 16">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- Sort icon — two opposite arrows -->
+    <symbol id="ic-sort" viewBox="0 0 20 20">
+      <path d="M6 3v14M6 17l-3-3M6 17l3-3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 17V3M14 3l-3 3M14 3l3 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- Compare icon — horizontal bars of varied length -->
+    <symbol id="ic-compare" viewBox="0 0 24 24">
+      <path d="M4 6h14M4 12h9M4 18h11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- =================================================================
+       LEFT VERTICAL NAV (decorative only)
+       ================================================================= -->
+  <nav class="leftnav">
+    <div class="logo">C</div>
+    <div class="nav-item active" title="Metrics"><svg class="svg-ico-20"><use href="#ic-overview"/></svg></div>
+    <div class="nav-item"><svg class="svg-ico-20"><use href="#ic-grid"/></svg></div>
+    <div class="nav-item"><svg class="svg-ico-20"><use href="#ic-bell"/></svg></div>
+    <div class="nav-item"><svg class="svg-ico-20"><use href="#ic-book"/></svg></div>
+    <div class="nav-item"><svg class="svg-ico-20"><use href="#ic-search"/></svg></div>
+    <div class="spacer"></div>
+    <div class="nav-item"><svg class="svg-ico-20"><use href="#ic-bag"/></svg></div>
+    <div class="nav-item" style="background: var(--accent-16); color: var(--accent);">M</div>
+  </nav>
+
+  <!-- =================================================================
+       MAIN CONTENT
+       ================================================================= -->
+  <main class="main">
+
+    <!-- ============= TOP BAR =============================================== -->
+    <div class="topbar">
+      <div class="title">Metrics</div>
+      <div class="top-tabs">
+        <div class="tab active"><svg class="svg-ico"><use href="#ic-overview"/></svg>Overview</div>
+        <div class="tab"><svg class="svg-ico"><use href="#ic-bars"/></svg>Scoreboard</div>
+        <div class="tab"><svg class="svg-ico"><use href="#ic-book"/></svg>Reports</div>
+        <div class="tab"><svg class="svg-ico"><use href="#ic-trend-up"/></svg>Improvements</div>
+        <div class="tab"><svg class="svg-ico"><use href="#ic-flag"/></svg>Goals</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn accent" title="AI"><svg class="svg-ico-20"><use href="#ic-spark"/></svg></button>
+        <button class="icon-btn" title="Chat"><svg class="svg-ico-20"><use href="#ic-bell"/></svg></button>
+        <button class="icon-btn" title="Apps"><svg class="svg-ico-20"><use href="#ic-grid"/></svg></button>
+      </div>
+    </div>
+
+    <!-- ============= FILTERS =============================================== -->
+    <div class="filters">
+      <div class="select"><div class="label">Life Cycle</div><div class="value">Drilling</div></div>
+      <div class="select"><div class="label">Program</div><div class="value">All</div></div>
+      <div class="select"><div class="label">Time Range</div><div class="value">Last 30 days</div></div>
+      <div class="select"><div class="label">KPIs</div><div class="value">9 selected</div></div>
+      <div class="switches">
+        <div class="switch on"><div class="toggle"></div>Active Wells Only</div>
+        <div class="switch"><div class="toggle"></div>Annualized</div>
+      </div>
+    </div>
+
+    <!-- ============= NEWS RIBBON ===========================================
+         Typography rule:
+           label text  → 14px regular @ white 70%
+           value text  → 14px medium  @ white 100% (or sentiment color)
+           meta text   → 12px regular @ white 50%
+    -->
+    <div class="news">
+      <button class="news-chip good" data-panel="news-fleet-perf" data-tip-type="news-fleet-perf">
+        <span class="ico"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+        Fleet performance <span class="v-success">+4 pts</span>
+        <span class="muted">vs last month</span>
+      </button>
+      <button class="news-chip bad" data-panel="news-act-now" data-tip-type="news-act-now">
+        <span class="ico"><svg class="svg-ico-20"><use href="#ic-trend-down"/></svg></span>
+        <strong>3 rigs</strong> in <span class="v-error">Act Now</span>
+        <span class="muted">since Mon</span>
+      </button>
+      <button class="news-chip warn" data-panel="news-biggest-gap" data-tip-type="news-biggest-gap">
+        <span class="ico"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+        Biggest gap <strong>8.5V • ROP</strong>
+        <span class="v-warning">$42k loss</span>
+      </button>
+      <button class="news-chip good" data-panel="news-days-saved" data-tip-type="news-days-saved">
+        <span class="ico"><svg class="svg-ico-20"><use href="#ic-dollar"/></svg></span>
+        Days Saved <span class="v-success">0.3 d</span>
+        <span class="muted">vs 0.1 d last month</span>
+      </button>
+    </div>
+
+    <!-- ============= ROW: FLEET SCORE / TIME&COST / RANKING =============== -->
+    <div class="cards-3">
+
+      <!-- FLEET SCORE CARD -->
+      <div class="card fleet-score-card">
+        <div class="card-title"><span class="ico"><svg class="svg-ico-20"><use href="#ic-cup"/></svg></span>Fleet Score</div>
+
+        <!-- Hero (full-width clickable area, centered vertically) -->
+        <button class="fs-top" data-panel="fleet-score" data-tip-type="fleet-score">
+          <div class="fs-left">
+            <div class="fs-bignum">
+              79<span class="pct">%</span>
+              <span class="delta">+4 pts</span>
+            </div>
+            <div class="fs-sub">vs 75% last month</div>
+            <div class="fs-sub-2">22 active wells</div>
+          </div>
+          <!-- viewBox extended right (170) and down (80) so the end dot
+               isn't clipped by the SVG bounds -->
+          <svg class="fs-spark" viewBox="0 0 170 80" fill="none">
+            <path d="M4 56 L24 54 L44 50 L64 48 L84 40 L104 36 L124 28 L144 20 L160 14" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="160" cy="14" r="4" fill="var(--success)"/>
+          </svg>
+        </button>
+
+        <!-- Bottom group — pinned to bottom -->
+        <div class="fs-bottom">
+          <div class="card-divider"></div>
+          <div class="fs-section-title">Performance by section</div>
+          <div class="fs-sections">
+            <button class="fs-section s-red"    data-panel="section" data-arg="8.5L" data-tip-type="fleet-section" data-tip-arg="8.5L|41"><div class="name">8.5L</div><div class="val">41%</div></button>
+            <button class="fs-section s-red"    data-panel="section" data-arg="8.5V" data-tip-type="fleet-section" data-tip-arg="8.5V|62"><div class="name">8.5V</div><div class="val">62%</div></button>
+            <button class="fs-section s-yellow" data-panel="section" data-arg='24"'  data-tip-type="fleet-section" data-tip-arg='24"|76'><div class="name">24"</div><div class="val">76%</div></button>
+            <button class="fs-section s-yellow" data-panel="section" data-arg='12"'  data-tip-type="fleet-section" data-tip-arg='12"|81'><div class="name">12"</div><div class="val">81%</div></button>
+            <button class="fs-section s-yellow" data-panel="section" data-arg='16"'  data-tip-type="fleet-section" data-tip-arg='16"|82'><div class="name">16"</div><div class="val">82%</div></button>
+            <button class="fs-section s-green"  data-panel="section" data-arg='22"'  data-tip-type="fleet-section" data-tip-arg='22"|91'><div class="name">22"</div><div class="val">91%</div></button>
+          </div>
+          <div class="legend">
+            <span><span class="dot" style="background:var(--success)"></span>On Track</span>
+            <span><span class="dot" style="background:var(--warning)"></span>Watch</span>
+            <span><span class="dot" style="background:var(--error)"></span>Act Now</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIME & COST CARD ===============================================
+           Two variants of the upper region. Toggle via the icon button
+           in the top-right of the card header.
+             A = two blocks (captured + potential), each with primary
+                 metric big and the other metric muted underneath.
+             B = combined block with stacked bar showing 12% captured
+                 + 88% potential = 100% of total opportunity.
+      -->
+      <div class="card tc-card" data-tc-variant="A">
+        <div class="card-title">
+          <span class="ico"><svg class="svg-ico-20"><use href="#ic-dollar"/></svg></span>
+          Time &amp; Cost Captured
+          <span class="spacer"></span>
+          <button class="card-action-btn" id="tcToggle" title="Switch view">
+            <svg class="svg-ico-20"><use href="#ic-toggle-view"/></svg>
+          </button>
+        </div>
+
+        <!-- ============= VARIANT A: two blocks ====================== -->
+        <div class="tc-view-a">
+          <button class="tc-block" data-panel="days-saved" data-tip-type="days-saved">
+            <div class="tc-row">
+              <div class="tc-label">Days saved</div>
+              <div class="tc-value-group">
+                <div class="tc-value-primary">0.3 d</div>
+                <div class="tc-value-secondary">$17,837</div>
+              </div>
+            </div>
+            <div class="tc-bar"><div style="width:12%;background:var(--success);"></div></div>
+            <div class="tc-meta"><span>12% captured</span><span>of $144k / 7.4 d possible</span></div>
+          </button>
+
+          <button class="tc-block" data-panel="savings-potential" data-tip-type="savings-pot">
+            <div class="tc-row">
+              <div class="tc-label">Savings potential</div>
+              <div class="tc-value-group">
+                <div class="tc-value-primary warning">$126k</div>
+                <div class="tc-value-secondary">7.1 d</div>
+              </div>
+            </div>
+            <div class="tc-bar from-right"><div style="width:88%;background:var(--warning);"></div></div>
+            <div class="tc-meta"><span>88% on the table</span><span>of $144k / 7.4 d possible</span></div>
+          </button>
+        </div>
+
+        <!-- ============= VARIANT B: combined stacked bar ============ -->
+        <div class="tc-view-b" hidden>
+          <div class="tc-halves">
+            <button class="tc-half tc-half-captured" data-panel="days-saved">
+              <div class="tc-half-label">Captured</div>
+              <div class="tc-value-group">
+                <div class="tc-value-primary success">0.3 d</div>
+                <div class="tc-value-secondary">$17,837 · 12%</div>
+              </div>
+            </button>
+            <button class="tc-half tc-half-potential" data-panel="savings-potential">
+              <div class="tc-half-label">Potential</div>
+              <div class="tc-value-group">
+                <div class="tc-value-primary warning">$126k</div>
+                <div class="tc-value-secondary">7.1 d · 88%</div>
+              </div>
+            </button>
+          </div>
+          <div class="tc-stacked">
+            <div style="width:12%;background:var(--success);"></div>
+            <div style="width:88%;background:var(--warning);"></div>
+          </div>
+          <div class="tc-total-line">of $144k / 7.4 d total possible</div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <div class="opp-title">Opportunity by section<span style="color:var(--text-muted)">Possible savings</span></div>
+        <div class="opp-list">
+          <button class="opp-row s-red"    data-panel="section" data-arg="8.5V" data-tip-type="opp-section" data-tip-arg="8.5V|42000|red"><div class="opp-name">8.5V</div><div class="opp-bar"><div style="width:96%"></div></div><div class="opp-val">$42k</div></button>
+          <button class="opp-row s-yellow" data-panel="section" data-arg="8.5L" data-tip-type="opp-section" data-tip-arg="8.5L|19000|yellow"><div class="opp-name">8.5L</div><div class="opp-bar"><div style="width:46%"></div></div><div class="opp-val">$19k</div></button>
+          <button class="opp-row s-yellow" data-panel="section" data-arg='24"'  data-tip-type="opp-section" data-tip-arg='24"|11000|yellow'><div class="opp-name">24"</div><div class="opp-bar"><div style="width:27%"></div></div><div class="opp-val">$11k</div></button>
+          <button class="opp-row s-green"  data-panel="section" data-arg='12"'  data-tip-type="opp-section" data-tip-arg='12"|9000|green'><div class="opp-name">12"</div><div class="opp-bar"><div style="width:22%"></div></div><div class="opp-val">$9k</div></button>
+          <button class="opp-row s-green"  data-panel="section" data-arg='16" Int.' data-tip-type="opp-section" data-tip-arg='16" Int.|2000|green'><div class="opp-name">16" Int.</div><div class="opp-bar"><div style="width:5%"></div></div><div class="opp-val">$2k</div></button>
+        </div>
+      </div>
+
+      <!-- RANKING CARD -->
+      <div class="card ranking-card">
+        <div class="card-title">
+          <span class="ico"><svg class="svg-ico-20"><use href="#ic-bars"/></svg></span>Ranking
+          <span class="spacer"></span>
+          <!-- Section filter dropdown -->
+          <div class="menu-anchor">
+            <button class="menu-trigger" id="rankSectionBtn" aria-haspopup="true">
+              <span id="rankSectionLabel">All Sections</span>
+              <span class="chev"><svg class="svg-ico"><use href="#ic-chev-down"/></svg></span>
+            </button>
+            <div class="menu" id="rankSectionMenu" hidden>
+              <button class="menu-item active" data-section="all">All Sections</button>
+              <button class="menu-item" data-section="8.5L">8.5L</button>
+              <button class="menu-item" data-section="8.5V">8.5V</button>
+              <button class="menu-item" data-section='24"'>24"</button>
+              <button class="menu-item" data-section='12"'>12"</button>
+              <button class="menu-item" data-section='16"'>16"</button>
+              <button class="menu-item" data-section='22"'>22"</button>
+            </div>
+          </div>
+          <!-- Sort icon dropdown -->
+          <div class="menu-anchor">
+            <button class="menu-trigger menu-trigger-icon" id="rankSortBtn" aria-haspopup="true" title="Sort">
+              <svg class="svg-ico-20"><use href="#ic-sort"/></svg>
+            </button>
+            <div class="menu" id="rankSortMenu" hidden>
+              <button class="menu-item active" data-sort="worst">Worst First</button>
+              <button class="menu-item" data-sort="best">Best First</button>
+              <button class="menu-item" data-sort="az">A–Z</button>
+              <button class="menu-item" data-sort="za">Z–A</button>
+            </div>
+          </div>
+          <!-- Compare entry point — opens the wide right panel -->
+          <button class="compare-mini" id="rankCompareBtn" title="Compare rigs side by side">
+            <svg><use href="#ic-compare"/></svg>Compare
+          </button>
+        </div>
+        <div class="rank-list" id="rankList"><!-- populated by JS --></div>
+      </div>
+
+    </div>
+
+    <!-- ============= PERFORMANCE GAPS HEATMAP ============================ -->
+    <div class="card gaps-card">
+      <div class="card-title"><span class="ico"><svg class="svg-ico-20"><use href="#ic-alarm"/></svg></span>Performance gaps</div>
+      <div class="gaps-grid" id="gapsGrid">
+        <div></div>
+        <div class="col-head">8.5L</div>
+        <div class="col-head">8.5V</div>
+        <div class="col-head">24"</div>
+        <div class="col-head">12"</div>
+        <div class="col-head">16"</div>
+        <div class="col-head">22"</div>
+        <!-- rows generated by JS below for compactness, but inlined here -->
+      </div>
+      <div class="legend" style="margin-top: 16px;">
+        <span><span class="dot" style="background:var(--success)"></span>On Track</span>
+        <span><span class="dot" style="background:var(--warning)"></span>Watch</span>
+        <span><span class="dot" style="background:var(--error)"></span>Act Now</span>
+      </div>
+    </div>
+
+    <!-- ============= TOP ACTIONS + INSIGHTS =============================== -->
+    <div class="cards-2" style="margin-top: 24px;">
+      <div class="card">
+        <div class="card-title"><span class="ico"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>Top Actions</div>
+        <div class="card-summary"><span class="v-warning">7 open</span> · <span class="v-muted">sorted by impact</span></div>
+        <div class="action-list">
+          <button class="action-card s-red" data-tip-type="action" data-panel="kpi" data-arg="0|On Bottom ROP|8.5V">
+            <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+            <span><span class="ac-name">On Bottom ROP</span><span class="ac-sub" style="display:block">Apex 47 / 8.5V</span></span>
+            <span class="ac-potential">potential: <span class="amt">$24,298</span></span>
+            <span class="ac-time">0.28 d</span>
+            <span class="ac-improve" title="Improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+          </button>
+          <button class="action-card s-red" data-tip-type="action" data-panel="kpi" data-arg='1|Cased Hole Tripping in|16"'>
+            <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+            <span><span class="ac-name">Cased Hole Tripping in</span><span class="ac-sub" style="display:block">Vanguard 128 / 16"</span></span>
+            <span class="ac-potential">potential: <span class="amt">$13,023</span></span>
+            <span class="ac-time">0.15 d</span>
+            <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+          </button>
+          <button class="action-card s-red" data-tip-type="action" data-panel="kpi" data-arg="2|Weight to Weight|8.5L">
+            <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+            <span><span class="ac-name">Weight to Weight</span><span class="ac-sub" style="display:block">Trident 219 / 8.5L</span></span>
+            <span class="ac-potential">potential: <span class="amt">$8,420</span></span>
+            <span class="ac-time">0.10 d</span>
+            <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+          </button>
+          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg='2|On Bottom ROP|16"'>
+            <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+            <span><span class="ac-name">On Bottom ROP</span><span class="ac-sub" style="display:block">Trident 219 / 16"</span></span>
+            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$4,002</span></span>
+            <span class="ac-time">0.05 d</span>
+            <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+          </button>
+          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg="0|Connection time|8.5L">
+            <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+            <span><span class="ac-name">Connection time</span><span class="ac-sub" style="display:block">Apex 47 / 8.5L</span></span>
+            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$3,201</span></span>
+            <span class="ac-time">0.04 d</span>
+            <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+          </button>
+          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg="4|Weight to Weight|8.5L">
+            <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+            <span><span class="ac-name">Weight to Weight</span><span class="ac-sub" style="display:block">Polaris 312 / 8.5L</span></span>
+            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$2,840</span></span>
+            <span class="ac-time">0.03 d</span>
+            <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+          </button>
+          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg='3|Cased Hole Tripping in|16"'>
+            <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
+            <span><span class="ac-name">Cased Hole Tripping in</span><span class="ac-sub" style="display:block">Helix 478 / 16"</span></span>
+            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$1,999</span></span>
+            <span class="ac-time">0.02 d</span>
+            <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- IMPROVEMENTS ACTIVITY ============================================
+           Closes the loop with Top Actions on the left: this widget shows
+           what's been done about past actions and what's pending. Each row
+           is clickable → opens the Improvement detail panel. -->
+      <div class="card">
+        <div class="card-title"><span class="ico"><svg class="svg-ico-20"><use href="#ic-imp"/></svg></span>Improvements</div>
+        <div class="card-summary">
+          <span class="v-success">$24,318 captured</span> this week ·
+          <span>12 sent</span> ·
+          <span class="v-warning">4 awaiting response</span>
+        </div>
+        <div class="action-list" id="impList"><!-- populated by JS --></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Tooltip overlay (single floating element reused for all hovers) -->
+<div class="tooltip" id="tooltip" hidden role="tooltip"></div>
+
+<!-- =====================================================================
+     RIGHT PANEL + SCRIM
+     ===================================================================== -->
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" role="dialog" aria-label="Detail panel">
+  <div class="panel-header">
+    <div class="panel-breadcrumb" id="panelBreadcrumb">Title</div>
+    <button class="panel-close" id="panelClose"><svg class="svg-ico"><use href="#ic-close"/></svg></button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</aside>
+
+<script>
+/* ========================================================================
+   DATA
+   ======================================================================== */
+
+// Rigs sorted worst → best (ranking). `section` = the hole section
+// this rig is currently drilling, used by the section filter.
+const RIGS = [
+  { name: 'Apex 47',      pct: 47, dir: 'down', status: 'red',    chip: 'Act now',  delta: -31, prev: 78, section: '8.5V' },
+  { name: 'Vanguard 128', pct: 55, dir: 'down', status: 'red',    chip: 'Act now',  delta: -26, prev: 81, section: '8.5L' },
+  { name: 'Trident 219',  pct: 61, dir: 'down', status: 'red',    chip: 'Act now',  delta: -1,  prev: 62, section: '8.5V' },
+  { name: 'Helix 478',    pct: 74, dir: 'down', status: 'yellow', chip: 'Watch',    delta: -2,  prev: 76, section: '8.5L' },
+  { name: 'Polaris 312',  pct: 88, dir: 'up',   status: 'green',  chip: 'On track', delta: +3,  prev: 85, section: '24"' },
+  { name: 'Saber 145',    pct: 89, dir: 'down', status: 'green',  chip: 'On track', delta: -1,  prev: 90, section: '12"' },
+  { name: 'Sentinel 587', pct: 90, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 89, section: '12"' },
+  { name: 'Meridian 256', pct: 93, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 91, section: '16"' },
+  { name: 'Anvil 723',    pct: 95, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 94, section: '16"' },
+  { name: 'Bedrock 891',  pct: 97, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 95, section: '22"' },
+];
+
+// Performance gaps heatmap data
+// columns: 8.5L, 8.5V, 24", 12", 16", 22"
+// rows:    ROP, Connection, Tripping, Directional, NPT
+const GAP_ROWS = [
+  { kpi: 'ROP',         cells: [
+    { v: 42403, s: 'red'    },
+    { v: 0,     s: 'green'  },
+    { v: 15000, s: 'yellow' },
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+  ]},
+  { kpi: 'Connection',  cells: [
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+    { v: 42403, s: 'red'    },
+    { v: 17932, s: 'yellow' },
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+  ]},
+  { kpi: 'Tripping',    cells: [
+    { v: 42403, s: 'red'    },
+    { v: 0,     s: 'green'  },
+    { v: 9000,  s: 'yellow' },
+    { v: 0,     s: 'green'  },
+    { v: 42403, s: 'red'    },
+    { v: 21498, s: 'yellow' },
+  ]},
+  { kpi: 'Directional', cells: [
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+    { v: 14000, s: 'yellow' },
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+  ]},
+  { kpi: 'NPT',         cells: [
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+    { v: 0,     s: 'green'  },
+    { v: 42403, s: 'red'    },
+    { v: 11000, s: 'yellow' },
+    { v: 12394, s: 'yellow' },
+  ]},
+];
+const SECTIONS = ['8.5L','8.5V','24"','12"','16"','22"'];
+
+/* COMPARE feature — KPI list + per-rig values. */
+const COMPARE_KPIS = [
+  { id: 'rop',  name: 'On Bottom ROP',   group: 'ROP',        goal: 22,  unit: 'm/hr' },
+  { id: 'conn', name: 'Connection time', group: 'Connection', goal: 2.8, unit: 'min'  },
+  { id: 's2b',  name: 'Slips to Bottom', group: 'Tripping',   goal: 12,  unit: 'min'  },
+  { id: 'w2w',  name: 'Weight to Weight',group: 'Tripping',   goal: 12,  unit: 'min'  },
+  { id: 'dir',  name: 'Directional',     group: 'Directional',goal: 100, unit: '%'    },
+  { id: 'npt',  name: 'NPT',             group: 'NPT',        goal: 0,   unit: 'hr'   },
+];
+// Rig index (in RIGS) → { kpiId: { a: actual, s: score% } }
+const KPI_VALUES = {
+  0: { rop:{a:10.86,s:21}, conn:{a:3.4, s:38}, s2b:{a:14, s:77}, w2w:{a:19, s:28}, dir:{a:78, s:60}, npt:{a:3.2, s:42} },
+  1: { rop:{a:14.2, s:55}, conn:{a:3.1, s:62}, s2b:{a:13, s:82}, w2w:{a:15, s:60}, dir:{a:88, s:80}, npt:{a:2.1, s:65} },
+  2: { rop:{a:14.5, s:45}, conn:{a:3.1, s:62}, s2b:{a:15, s:60}, w2w:{a:16, s:50}, dir:{a:80, s:64}, npt:{a:2.8, s:50} },
+  3: { rop:{a:16.8, s:65}, conn:{a:3.0, s:70}, s2b:{a:13, s:82}, w2w:{a:14, s:66}, dir:{a:90, s:84}, npt:{a:1.6, s:78} },
+  4: { rop:{a:19.5, s:85}, conn:{a:2.85,s:88}, s2b:{a:12, s:90}, w2w:{a:12, s:92}, dir:{a:96, s:94}, npt:{a:0.8, s:92} },
+  5: { rop:{a:19.8, s:88}, conn:{a:2.82,s:92}, s2b:{a:12, s:92}, w2w:{a:12, s:92}, dir:{a:95, s:92}, npt:{a:0.9, s:90} },
+  6: { rop:{a:20.1, s:90}, conn:{a:2.82,s:92}, s2b:{a:12, s:92}, w2w:{a:12, s:92}, dir:{a:97, s:96}, npt:{a:0.6, s:94} },
+  7: { rop:{a:20.5, s:93}, conn:{a:2.8, s:95}, s2b:{a:12, s:96}, w2w:{a:12, s:96}, dir:{a:98, s:98}, npt:{a:0.5, s:96} },
+  8: { rop:{a:21.0, s:95}, conn:{a:2.78,s:98}, s2b:{a:11.8,s:98},w2w:{a:11.8,s:98},dir:{a:99, s:99}, npt:{a:0.3, s:98} },
+  9: { rop:{a:21.5, s:97}, conn:{a:2.76,s:100},s2b:{a:11.5,s:100},w2w:{a:11.5,s:100},dir:{a:100,s:100},npt:{a:0.2,s:100} },
+};
+const compareState = {
+  section: 'all',
+  // Default: all rigs and all KPIs selected (user can deselect)
+  selectedRigs: new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+  selectedKpis: new Set(['rop', 'conn', 's2b', 'w2w', 'dir', 'npt']),
+  // Sort order is inherited from Ranking when the user opens Compare
+  sort: 'worst',  // worst | best | az | za
+};
+function scoreStatus(s) { return s < 50 ? 'red' : s < 80 ? 'yellow' : 'green'; }
+
+// Improvement status pipeline. Add new statuses here; the chip class
+// auto-picks the right color via the existing .chip variants.
+const STATUSES = {
+  sent:       { label: 'Sent',        chip: 'muted'  },
+  viewed:     { label: 'Viewed',      chip: 'accent' },
+  inprogress: { label: 'In progress', chip: 'yellow' },
+  captured:   { label: 'Captured',    chip: 'green'  },
+  dismissed:  { label: 'Dismissed',   chip: 'muted'  },
+};
+
+// Mock improvements feed. `type` decides whether we show "captured" or
+// "potential" framing on the row. `kpiStatus` colors the left bar
+// (severity of the underlying problem).
+const IMPROVEMENTS = [
+  { id: 0, kpi: 'On Bottom ROP',       rig: 'Apex 47',    rigIdx: 0, section: '8.5L', amount: 8402, type: 'captured',  status: 'captured',  date: 'Mar 28', kpiStatus: 'red'    },
+  { id: 1, kpi: 'Weight to Weight',    rig: 'Vanguard 128',  rigIdx: 1, section: '8.5V', amount: 6200, type: 'potential', status: 'inprogress',date: 'Mar 30', kpiStatus: 'red'    },
+  { id: 2, kpi: 'Slips to Bottom',     rig: 'Trident 219',  rigIdx: 2, section: '16"',  amount: 3800, type: 'potential', status: 'viewed',    date: 'Apr 1',  kpiStatus: 'red'    },
+  { id: 3, kpi: 'Connection time',     rig: 'Polaris 312',  rigIdx: 4, section: '24"',  amount: 5108, type: 'captured',  status: 'captured',  date: 'Mar 27', kpiStatus: 'yellow' },
+  { id: 4, kpi: 'Cased Hole Tripping', rig: 'Helix 478',  rigIdx: 3, section: '16"',  amount: 2400, type: 'potential', status: 'sent',      date: 'Apr 2',  kpiStatus: 'yellow' },
+  { id: 5, kpi: 'Tripping speed',      rig: 'Bedrock 891', rigIdx: 9, section: '22"',  amount: 4808, type: 'captured',  status: 'captured',  date: 'Mar 26', kpiStatus: 'yellow' },
+  { id: 6, kpi: 'Connection time',     rig: 'Trident 219',  rigIdx: 2, section: '12"',  amount: 3100, type: 'potential', status: 'inprogress',date: 'Mar 31', kpiStatus: 'yellow' },
+  { id: 7, kpi: 'ROP',                 rig: 'Saber 145',   rigIdx: 5, section: '16"',  amount: 1200, type: 'potential', status: 'dismissed', date: 'Mar 29', kpiStatus: 'yellow' },
+];
+
+/* ========================================================================
+   RANKING + GAPS — render initial DOM
+   ======================================================================== */
+// HTML-attribute escape for values that may contain quotes (e.g. section names like 24")
+function attr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
+
+function maxWidthForRank() {
+  // bar length: scale with pct so red rigs show short, green rigs show full
+  return Math.max(...RIGS.map(r => r.pct));
+}
+const RANK_BAR_MAX = 100;
+
+// Ranking UI state — read by renderRanking(), changed by the menus.
+let rankSection = 'all';
+let rankSort    = 'worst';   // worst | best | az | za
+
+function renderRanking() {
+  // 1) Filter by section
+  let rigs = RIGS.slice();
+  if (rankSection !== 'all') {
+    rigs = rigs.filter(r => r.section === rankSection);
+  }
+  // 2) Sort
+  if (rankSort === 'best')      rigs.sort((a, b) => b.pct - a.pct);
+  else if (rankSort === 'az')   rigs.sort((a, b) => a.name.localeCompare(b.name));
+  else if (rankSort === 'za')   rigs.sort((a, b) => b.name.localeCompare(a.name));
+  else                          rigs.sort((a, b) => a.pct - b.pct);  // worst first
+
+  const list = document.getElementById('rankList');
+  if (rigs.length === 0) {
+    list.innerHTML = `
+      <div style="color: var(--text-muted); font-size: 13px; padding: 24px 8px; text-align: center;">
+        No rigs currently drilling ${rankSection}
+      </div>`;
+    return;
+  }
+  list.innerHTML = rigs.map((r, i) => {
+    // Preserve the original index so click-through still resolves the
+    // correct rig in the Rig panel even after filtering/sorting.
+    const origIdx = RIGS.indexOf(r);
+    return `
+    <button class="rank-row s-${r.status}" data-panel="rig" data-arg="${origIdx}" data-tip-type="rig" data-tip-arg="${origIdx}">
+      <div class="rank-num">${i+1}</div>
+      <div class="rank-name">${r.name}</div>
+      <div class="rank-bar"><div style="width:${r.pct}%"></div></div>
+      <div class="rank-pct">${r.pct}%</div>
+      <div class="rank-arrow">
+        <svg class="svg-ico" style="color:${r.dir === 'up' ? 'var(--success)' : 'var(--error)'}">
+          <use href="#ic-arrow-${r.dir}"/>
+        </svg>
+      </div>
+      <div><span class="chip ${r.status === 'red' ? 'red' : r.status === 'yellow' ? 'yellow' : 'green'}">${r.chip}</span></div>
+    </button>
+  `;
+  }).join('');
+}
+renderRanking();
+
+/* Wire up the section + sort dropdown menus in the Ranking header.
+   Generic enough to reuse if we add more dropdowns later. */
+function setupMenu(triggerId, menuId, onSelect) {
+  const trigger = document.getElementById(triggerId);
+  const menu    = document.getElementById(menuId);
+  if (!trigger || !menu) return;
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Close any other open menus first
+    document.querySelectorAll('.menu').forEach(m => { if (m !== menu) m.hidden = true; });
+    menu.hidden = !menu.hidden;
+  });
+  menu.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Visually mark selection within this menu
+      menu.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      onSelect(item);
+      menu.hidden = true;
+    });
+  });
+}
+// Outside click closes all menus
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.menu').forEach(m => {
+    if (!m.hidden && !m.contains(e.target)) m.hidden = true;
+  });
+});
+
+setupMenu('rankSectionBtn', 'rankSectionMenu', (item) => {
+  rankSection = item.dataset.section;
+  document.getElementById('rankSectionLabel').textContent = item.textContent;
+  renderRanking();
+});
+setupMenu('rankSortBtn', 'rankSortMenu', (item) => {
+  rankSort = item.dataset.sort;
+  renderRanking();
+});
+
+/* Ranking → Compare entry: carry BOTH the section filter and the
+   sort order so the user lands in the same view they were looking at. */
+document.getElementById('rankCompareBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  compareState.section = rankSection;
+  compareState.sort    = rankSort;
+  openPanel('compare');
+});
+
+function fmtMoney(n) {
+  if (n === 0) return '';
+  if (n >= 1000) return '$' + Math.round(n/100)/10 + 'k'.replace('.0k','k');
+  return '$' + n;
+}
+// Cleaner formatter
+function money(n) {
+  if (n === 0) return '';
+  if (n >= 1000) {
+    const k = n/1000;
+    return '$' + (Math.abs(k - Math.round(k)) < 0.05 ? Math.round(k) : k.toFixed(1)) + 'k';
+  }
+  return '$' + n;
+}
+function moneyFull(n) {
+  return '$' + n.toLocaleString('en-US');
+}
+
+/* Time & Cost card variant toggle.
+   Persists across page reloads via localStorage. */
+(function () {
+  const card = document.querySelector('.tc-card');
+  if (!card) return;
+  const toggle = document.getElementById('tcToggle');
+  const viewA = card.querySelector('.tc-view-a');
+  const viewB = card.querySelector('.tc-view-b');
+  function apply(v) {
+    card.dataset.tcVariant = v;
+    viewA.hidden = (v !== 'A');
+    viewB.hidden = (v !== 'B');
+    try { localStorage.setItem('tc-variant', v); } catch (e) {}
+  }
+  // Restore last choice
+  let saved = null;
+  try { saved = localStorage.getItem('tc-variant'); } catch (e) {}
+  apply(saved === 'B' ? 'B' : 'A');
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();  // don't let the body-level panel handler pick this up
+    apply(card.dataset.tcVariant === 'A' ? 'B' : 'A');
+  });
+})();
+
+function renderImprovements() {
+  const list = document.getElementById('impList');
+  if (!list) return;
+  list.innerHTML = IMPROVEMENTS.map(imp => {
+    const sclass = 's-' + imp.kpiStatus;
+    const status = STATUSES[imp.status];
+    const isCaptured = imp.type === 'captured';
+    const amtColor = isCaptured
+      ? 'var(--success)'
+      : (imp.kpiStatus === 'red' ? 'var(--error)' : 'var(--warning)');
+    const amtLabel = isCaptured ? 'captured: ' : 'potential: ';
+    return `
+      <button class="action-card ${sclass}" data-panel="improvement" data-arg="${imp.id}" data-tip-type="improvement">
+        <span class="severity">
+          <svg class="svg-ico-20"><use href="#${isCaptured ? 'ic-imp' : 'ic-warning'}"/></svg>
+        </span>
+        <span>
+          <span class="ac-name">${imp.kpi}</span>
+          <span class="ac-sub" style="display:block">${imp.rig} / ${imp.section}</span>
+        </span>
+        <span class="ac-potential">${amtLabel}<span class="amt" style="color:${amtColor}">$${imp.amount.toLocaleString()}</span></span>
+        <span class="chip ${status.chip}">${status.label}</span>
+        <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-arrow-right"/></svg></span>
+      </button>
+    `;
+  }).join('');
+}
+renderImprovements();
+
+function renderGaps() {
+  const grid = document.getElementById('gapsGrid');
+  let html = `
+    <div></div>
+    <div class="col-head">8.5L</div>
+    <div class="col-head">8.5V</div>
+    <div class="col-head">24"</div>
+    <div class="col-head">12"</div>
+    <div class="col-head">16"</div>
+    <div class="col-head">22"</div>
+  `;
+  GAP_ROWS.forEach(row => {
+    html += `<div class="row-head">${row.kpi}</div>`;
+    row.cells.forEach((c, idx) => {
+      const cls = c.v === 0 ? 'empty' : `s-${c.s}`;
+      const label = c.v === 0 ? '' : '$' + c.v.toLocaleString('en-US');
+      const tipArg = attr(row.kpi + '|' + SECTIONS[idx] + '|' + c.v + '|' + c.s);
+      html += `<button class="gap-cell ${cls}" data-panel="gap" data-arg="${tipArg}" data-tip-type="gap-cell" data-tip-arg="${tipArg}">${label}</button>`;
+    });
+  });
+  grid.innerHTML = html;
+}
+renderGaps();
+
+/* ========================================================================
+   RIGHT PANEL — navigation stack and renderers
+   ======================================================================== */
+const panel = document.getElementById('panel');
+const scrim = document.getElementById('scrim');
+const panelBody = document.getElementById('panelBody');
+const panelBreadcrumb = document.getElementById('panelBreadcrumb');
+const panelClose = document.getElementById('panelClose');
+
+let navStack = []; // [{ panelId, arg, crumb }]
+
+function openPanel(panelId, arg) {
+  navStack = [{ panelId, arg }];
+  chipHidden = new Set();    // reset chip dismissals
+  render();
+  panel.classList.add('open');
+  scrim.classList.add('open');
+}
+function pushPanel(panelId, arg) {
+  navStack.push({ panelId, arg });
+  chipHidden = new Set();    // each new level starts fresh
+  render();
+}
+function popTo(idx) {
+  navStack = navStack.slice(0, idx + 1);
+  render();
+}
+function closePanel() {
+  panel.classList.remove('open');
+  scrim.classList.remove('open');
+  navStack = [];
+}
+panelClose.addEventListener('click', closePanel);
+scrim.addEventListener('click', closePanel);
+
+/* Breadcrumb */
+function renderBreadcrumb(crumbs) {
+  // crumbs: [{label, idx}]
+  panelBreadcrumb.innerHTML = crumbs.map((c, i) => {
+    const isLast = i === crumbs.length - 1;
+    if (isLast) return `<span class="current">${c.label}</span>`;
+    return `<span class="crumb" data-pop="${i}">${c.label}</span><span class="sep">›</span>`;
+  }).join('');
+  panelBreadcrumb.querySelectorAll('[data-pop]').forEach(el => {
+    el.addEventListener('click', () => popTo(parseInt(el.dataset.pop, 10)));
+  });
+}
+
+/* Main render dispatcher */
+function render() {
+  const top = navStack[navStack.length - 1];
+  const renderer = PANELS[top.panelId];
+  if (!renderer) {
+    panelBody.innerHTML = `<div style="color:var(--text-muted)">Unknown panel: ${top.panelId}</div>`;
+    renderBreadcrumb([{label:'Unknown'}]);
+    return;
+  }
+  const { title, body, crumbs } = renderer(top.arg);
+  // Build breadcrumb from history (skip if explicit crumbs provided per top level)
+  let bc;
+  if (crumbs) {
+    bc = crumbs;
+  } else if (navStack.length > 1) {
+    bc = navStack.map((n, i) => ({ label: PANELS[n.panelId].label(n.arg), idx: i }));
+  } else {
+    bc = [{ label: title }];
+  }
+  renderBreadcrumb(bc);
+  panelBody.innerHTML = body;
+  attachPanelClicks();
+}
+
+/* Chip × handler: each "remove" action knows where to route based on
+   the panel and the chip dimension. Pass 1 only covers the Rig panel;
+   other × clicks just dismiss the chip visually (so the user can
+   experiment without unintended navigation). */
+function handleChipRemove(action) {
+  const top = navStack[navStack.length - 1];
+  if (!top) return closePanel();
+
+  if (top.panelId === 'rig') {
+    const rig = RIGS[parseInt(top.arg, 10)];
+    if (action === 'rig-remove-rig') {
+      // Removing the rig filter widens the view to "all rigs with this
+      // status". Only Act Now currently has a dedicated movers panel,
+      // so we route there if the rig was Act Now. Otherwise close.
+      if (rig && rig.status === 'red') {
+        openPanel('news-act-now');
+      } else {
+        closePanel();
+      }
+      return;
+    }
+    if (action === 'rig-remove-status') {
+      // Status isn't a real filter on the Rig panel (content already
+      // shows all KPIs), so we just dismiss the chip visually.
+      chipHidden.add(action);
+      render();
+      return;
+    }
+  }
+
+  // Fallback: any other × just dismisses the chip on the current view.
+  // (Other panels' chip semantics will be wired in later passes.)
+  chipHidden.add(action);
+  render();
+}
+
+/* When panel content has data-panel buttons, wire them up to push */
+function attachPanelClicks() {
+  // Chip × buttons (must run before data-panel so clicks don't bubble
+  // up and accidentally re-open the same panel)
+  panelBody.querySelectorAll('[data-chip-action]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleChipRemove(el.dataset.chipAction);
+    });
+  });
+
+  panelBody.querySelectorAll('[data-panel]').forEach(el => {
+    el.addEventListener('click', () => {
+      const p = el.dataset.panel;
+      const a = el.dataset.arg;
+      pushPanel(p, a);
+    });
+  });
+
+  // Inline COMPARE button inside the Rig panel: open the Compare panel
+  // and add the current rig to the selection.
+  panelBody.querySelectorAll('.compare-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const top = navStack[navStack.length - 1];
+      if (top && top.panelId === 'rig') {
+        compareState.selectedRigs.add(parseInt(top.arg, 10));
+      }
+      openPanel('compare');
+    });
+  });
+
+  // ----- Compare panel wiring --------------------------------------
+
+  // 1) Click on a .cmp-select toggles its internal .menu (and closes others)
+  panelBody.querySelectorAll('.cmp-select').forEach(sel => {
+    const menu = sel.querySelector('.menu');
+    sel.addEventListener('click', (e) => {
+      // Clicks inside the menu items have their own handlers — don't toggle
+      if (menu && menu.contains(e.target)) return;
+      e.stopPropagation();
+      document.querySelectorAll('.menu').forEach(m => { if (m !== menu) m.hidden = true; });
+      if (menu) menu.hidden = !menu.hidden;
+    });
+  });
+
+  // 2) Multi-select toggles for rigs — DOES NOT close the menu (so users
+  //    can pick several without reopening)
+  panelBody.querySelectorAll('[data-rig-toggle]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const i = parseInt(el.dataset.rigToggle, 10);
+      if (compareState.selectedRigs.has(i)) compareState.selectedRigs.delete(i);
+      else compareState.selectedRigs.add(i);
+      render();
+      // Re-open the rigs menu after re-render so the user can keep picking
+      const after = document.querySelector('#cmpRigsSelect .menu');
+      if (after) after.hidden = false;
+    });
+  });
+  panelBody.querySelectorAll('[data-kpi-toggle]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = el.dataset.kpiToggle;
+      if (compareState.selectedKpis.has(id)) compareState.selectedKpis.delete(id);
+      else compareState.selectedKpis.add(id);
+      render();
+      const after = document.querySelector('#cmpKpisSelect .menu');
+      if (after) after.hidden = false;
+    });
+  });
+
+  // 3) "Select all / Deselect all" for rigs
+  panelBody.querySelectorAll('[data-rigs-all]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (compareState.selectedRigs.size === RIGS.length) compareState.selectedRigs.clear();
+      else RIGS.forEach((_, i) => compareState.selectedRigs.add(i));
+      render();
+      const after = document.querySelector('#cmpRigsSelect .menu');
+      if (after) after.hidden = false;
+    });
+  });
+  panelBody.querySelectorAll('[data-kpis-all]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (compareState.selectedKpis.size === COMPARE_KPIS.length) compareState.selectedKpis.clear();
+      else COMPARE_KPIS.forEach(k => compareState.selectedKpis.add(k.id));
+      render();
+      const after = document.querySelector('#cmpKpisSelect .menu');
+      if (after) after.hidden = false;
+    });
+  });
+
+  // 4) Section single-select inside the section selector
+  panelBody.querySelectorAll('[data-section]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      compareState.section = el.dataset.section;
+      render();
+    });
+  });
+
+  // 5) Sort dropdown — same options as Ranking
+  if (document.getElementById('cmpSortBtn')) {
+    setupMenu('cmpSortBtn', 'cmpSortMenu', (item) => {
+      compareState.sort = item.dataset.sort;
+      render();
+    });
+  }
+}
+
+/* Wire up top-level page clicks */
+document.body.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-panel]');
+  if (!btn) return;
+  // Only handle clicks that originated outside the panel (top-level entry)
+  if (panel.contains(btn)) return;
+  e.preventDefault();
+  openPanel(btn.dataset.panel, btn.dataset.arg);
+});
+
+/* ========================================================================
+   PANEL CONTENT
+   ======================================================================== */
+
+// Tracks chips the user dismissed via × on the current panel.
+// Reset whenever a new panel opens (see openPanel/pushPanel).
+let chipHidden = new Set();
+
+// Helpers
+function chipSet(chips) {
+  // Each chip: { cls, label, x: bool, action?: string }
+  //   - if `action` is set, the × is a real <button> with data-chip-action
+  //   - if a chip's `action` is in chipHidden, the chip is dropped entirely
+  return `<div class="filter-chips">
+    ${chips.filter(c => !c.action || !chipHidden.has(c.action)).map(c => {
+      let xBtn = '';
+      if (c.x) {
+        xBtn = c.action
+          ? ` <button class="x" type="button" data-chip-action="${c.action}" aria-label="Remove">×</button>`
+          : ` <span class="x">×</span>`;
+      }
+      return `<span class="f-chip ${c.cls}">${c.label}${xBtn}</span>`;
+    }).join('')}
+  </div>`;
+}
+function rigCard(r, idx) {
+  return `
+    <button class="rig-card s-${r.status}" data-panel="rig" data-arg="${idx}">
+      <div class="rig-meta">
+        <div class="rig-name">${r.name}</div>
+        <div class="rig-sub">Apr 1, 6:20 AM</div>
+      </div>
+      <div class="rig-right">
+        <span class="rig-pct">${r.pct}%</span>
+        <svg class="svg-ico" style="color:${r.dir === 'up' ? 'var(--success)' : 'var(--error)'}"><use href="#ic-arrow-${r.dir}"/></svg>
+        <span class="chip ${r.status === 'red' ? 'red' : r.status === 'yellow' ? 'yellow' : 'green'}">${r.chip}</span>
+      </div>
+    </button>
+  `;
+}
+function kpiCard(opts) {
+  // opts: { name, group, pct, actual, goal, unit, status, target, arg }
+  return `
+    <button class="kpi-card" data-panel="${attr(opts.target || '')}" data-arg="${attr(opts.arg || '')}">
+      <div>
+        <div class="kpi-name">${opts.name}</div>
+        <div class="kpi-group">${opts.group}</div>
+      </div>
+      <div class="kpi-right">
+        <div style="text-align:right">
+          <div class="kpi-value ${opts.status}">${opts.pct}%</div>
+          <div class="kpi-actual">${opts.actual} <span class="muted">vs</span> ${opts.goal} <span class="muted">${opts.unit}</span></div>
+        </div>
+        <span class="kpi-improve" title="Improve"><svg class="svg-ico"><use href="#ic-trend-up"/></svg></span>
+      </div>
+    </button>
+  `;
+}
+
+const PANELS = {
+
+  /* ------------------------------------------------------------------
+     NEWS CHIP PANELS
+     ------------------------------------------------------------------ */
+
+  // 1) Fleet performance change
+  'news-fleet-perf': {
+    label: () => 'Fleet performance change',
+    fn: () => {
+      const title = 'Fleet performance change';
+      const body = `
+        ${chipSet([
+          { cls: 'active suc', label: '+4 pts', x: true },
+          { cls: 'off', label: 'Last 30 days' },
+        ])}
+        <div class="panel-list-head">Top movers</div>
+        ${rigCard(RIGS[9], 9)}
+        ${rigCard(RIGS[8], 8)}
+        ${rigCard(RIGS[7], 7)}
+        <div class="panel-list-head">Top decliners</div>
+        ${rigCard(RIGS[0], 0)}
+        ${rigCard(RIGS[1], 1)}
+        ${rigCard(RIGS[2], 2)}
+        <div class="trend-block">
+          <div class="trend-label">Fleet score — last 14 days</div>
+          <div class="trend-bars">
+            ${['r','r','y','y','y','y','g','g','g','g','g','g','g','g'].map(c => `<div class="trend-bar ${c}" style="height:${30 + Math.random()*50}px"></div>`).join('')}
+          </div>
+          <div class="trend-axis"><span>May 6</span><span>May 13</span><span>May 20</span></div>
+        </div>
+      `;
+      return { title, body };
+    }
+  },
+
+  // 2) Act Now movers (matches the Figma right panel exactly)
+  'news-act-now': {
+    label: () => 'Act Now movers',
+    fn: () => {
+      const title = 'Act Now movers';
+      const body = `
+        ${chipSet([
+          { cls: 'active', label: 'Act Now', x: true },
+          { cls: 'active acc', label: 'New', x: true },
+        ])}
+        <div class="panel-list-head">3 new this week</div>
+
+        <div class="p-card s-red" data-panel="rig" data-arg="0">
+          <div class="p-card-head">
+            <div>
+              <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-rig"/></svg>Apex 47</div>
+              <div class="p-card-sub">Apr 1, 6:20 AM</div>
+            </div>
+            <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-down"/></svg></span>
+          </div>
+          <div class="delta-row">
+            <span class="delta-from">78%</span>
+            <span class="delta-arrow"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+            <span class="delta-to red">47%</span>
+            <span class="delta-chip chip red">↓ 31%</span>
+          </div>
+          ${kpiCard({ name: 'On Bottom ROP', group: '8.5V', pct: 21, actual: '10.86', goal: '22', unit: 'm/hr', status: 'red', target: 'kpi', arg: '0|On Bottom ROP|8.5V' })}
+        </div>
+
+        <div class="p-card s-red" data-panel="rig" data-arg="1">
+          <div class="p-card-head">
+            <div>
+              <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-rig"/></svg>Vanguard 128</div>
+              <div class="p-card-sub">Connection • 8.5L section • Apr 2, 11:45 AM</div>
+            </div>
+            <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+          </div>
+          <div class="delta-row">
+            <span class="delta-from">81%</span>
+            <span class="delta-arrow"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+            <span class="delta-to red">55%</span>
+            <span class="delta-chip chip red">↓ 26%</span>
+          </div>
+        </div>
+
+        <div class="p-card s-red" data-panel="rig" data-arg="2">
+          <div class="p-card-head">
+            <div>
+              <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-rig"/></svg>Trident 219</div>
+              <div class="p-card-sub">Connection • 8.5L section • Apr 2, 11:45 AM</div>
+            </div>
+            <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+          </div>
+          <div class="delta-row">
+            <span class="delta-from">77%</span>
+            <span class="delta-arrow"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+            <span class="delta-to red">61%</span>
+            <span class="delta-chip chip red">↓ 1%</span>
+          </div>
+        </div>
+
+        <div class="panel-list-head">All Act Now Rigs (12)</div>
+        ${rigCard(RIGS[2], 2)}
+        ${rigCard(RIGS[1], 1)}
+        ${rigCard(RIGS[3], 3)}
+      `;
+      return { title, body };
+    }
+  },
+
+  // 3) Biggest gap
+  'news-biggest-gap': {
+    label: () => 'Biggest gap',
+    fn: () => {
+      const title = 'Biggest gap';
+      const body = `
+        ${chipSet([
+          { cls: 'active warn', label: 'Biggest gap', x: true },
+          { cls: 'active acc',  label: '8.5V', x: true },
+          { cls: 'active acc',  label: 'ROP',  x: true },
+        ])}
+        <div class="kpi-hero s-red">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Gap</div><div class="kpi-hero-val red">$42k</div><div class="kpi-hero-unit">vs $0 target</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Avg actual</div><div class="kpi-hero-val">12.4</div><div class="kpi-hero-unit">m/hr</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Goal</div><div class="kpi-hero-val green">22</div><div class="kpi-hero-unit">m/hr</div></div>
+          </div>
+          <button class="improve-btn"><svg class="svg-ico"><use href="#ic-trend-up"/></svg>SEND IMPROVEMENT</button>
+        </div>
+        <div class="panel-list-head">Rigs contributing to this gap</div>
+        ${rigCard(RIGS[0], 0)}
+        ${rigCard(RIGS[1], 1)}
+        ${rigCard(RIGS[2], 2)}
+        ${rigCard(RIGS[3], 3)}
+      `;
+      return { title, body };
+    }
+  },
+
+  // 4) Days saved
+  'news-days-saved': {
+    label: () => 'Days saved',
+    fn: () => {
+      const title = 'Days Saved';
+      const body = `
+        ${chipSet([
+          { cls: 'active suc', label: '0.3 d', x: true },
+          { cls: 'off', label: 'Last 30 days' },
+        ])}
+        <div class="kpi-hero">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days saved</div><div class="kpi-hero-val green">0.3 d</div><div class="kpi-hero-unit">≈ $17,837</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Goal (30-day)</div><div class="kpi-hero-val">7.4 d</div><div class="kpi-hero-unit">4% complete</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">vs last month</div><div class="kpi-hero-val green">+0.2 d</div><div class="kpi-hero-unit">200% MoM</div></div>
+          </div>
+        </div>
+        <div class="trend-block">
+          <div class="trend-label">Cumulative days saved — last 14 days</div>
+          <div class="trend-bars">
+            ${[12,14,18,22,26,30,34,40,46,52,58,64,70,76].map(h => `<div class="trend-bar g" style="height:${h}%;"></div>`).join('')}
+          </div>
+          <div class="trend-axis"><span>May 6</span><span>May 13</span><span>May 20</span></div>
+        </div>
+        <div class="panel-list-head">Top contributing rigs</div>
+        ${rigCard(RIGS[9], 9)}
+        ${rigCard(RIGS[8], 8)}
+        ${rigCard(RIGS[7], 7)}
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     FLEET SCORE PANEL
+     ------------------------------------------------------------------ */
+  'fleet-score': {
+    label: () => 'Fleet Score',
+    fn: () => {
+      const title = 'Fleet Score';
+      const body = `
+        ${chipSet([
+          { cls: 'active acc', label: 'Fleet', x: true },
+          { cls: 'off', label: 'Last 30 days' },
+        ])}
+        <div class="kpi-hero">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Score</div><div class="kpi-hero-val">79%</div><div class="kpi-hero-unit">22 active wells</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">vs last month</div><div class="kpi-hero-val green">+4 pts</div><div class="kpi-hero-unit">from 75%</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Target</div><div class="kpi-hero-val">85%</div><div class="kpi-hero-unit">6 pts to go</div></div>
+          </div>
+        </div>
+        <div class="trend-block">
+          <div class="trend-label">Fleet score — last 30 days</div>
+          <div class="trend-bars">
+            ${['r','r','y','y','y','y','y','y','y','g','g','g','g','g'].map((c,i) => `<div class="trend-bar ${c}" style="height:${30 + i*4}%;"></div>`).join('')}
+          </div>
+          <div class="trend-axis"><span>Apr 20</span><span>May 6</span><span>May 20</span></div>
+        </div>
+        <div class="panel-list-head">Performance by section</div>
+        <button class="rig-card s-red" data-panel="section" data-arg="8.5L">
+          <div class="rig-meta"><div class="rig-name">8.5L</div><div class="rig-sub">9 rigs in section</div></div>
+          <div class="rig-right"><span class="rig-pct">41%</span><span class="chip red">Act now</span></div>
+        </button>
+        <button class="rig-card s-red" data-panel="section" data-arg="8.5V">
+          <div class="rig-meta"><div class="rig-name">8.5V</div><div class="rig-sub">7 rigs in section</div></div>
+          <div class="rig-right"><span class="rig-pct">62%</span><span class="chip red">Act now</span></div>
+        </button>
+        <button class="rig-card s-yellow" data-panel="section" data-arg='24"'>
+          <div class="rig-meta"><div class="rig-name">24"</div><div class="rig-sub">4 rigs in section</div></div>
+          <div class="rig-right"><span class="rig-pct">76%</span><span class="chip yellow">Watch</span></div>
+        </button>
+        <button class="rig-card s-yellow" data-panel="section" data-arg='12"'>
+          <div class="rig-meta"><div class="rig-name">12"</div><div class="rig-sub">11 rigs in section</div></div>
+          <div class="rig-right"><span class="rig-pct">81%</span><span class="chip yellow">Watch</span></div>
+        </button>
+        <button class="rig-card s-yellow" data-panel="section" data-arg='16"'>
+          <div class="rig-meta"><div class="rig-name">16"</div><div class="rig-sub">8 rigs in section</div></div>
+          <div class="rig-right"><span class="rig-pct">82%</span><span class="chip yellow">Watch</span></div>
+        </button>
+        <button class="rig-card s-green" data-panel="section" data-arg='22"'>
+          <div class="rig-meta"><div class="rig-name">22"</div><div class="rig-sub">3 rigs in section</div></div>
+          <div class="rig-right"><span class="rig-pct">91%</span><span class="chip green">On track</span></div>
+        </button>
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     SECTION PANEL — opened from Fleet Score pills or Opportunity bars
+     ------------------------------------------------------------------ */
+  'section': {
+    label: (arg) => `${arg} section`,
+    fn: (arg) => {
+      const sectionScores = { '8.5L': 41, '8.5V': 62, '24"': 76, '12"': 81, '16"': 82, '22"': 91, '16" Int.': 82, '16" Surf.': 86 };
+      const sectionDollars = { '8.5L': 19000, '8.5V': 42000, '24"': 11000, '12"': 9000, '16"': 3000, '22"': 0, '16" Int.': 2000, '16" Surf.': 1000 };
+      const pct = sectionScores[arg] ?? 60;
+      const dollars = sectionDollars[arg] ?? 0;
+      const status = pct < 70 ? 'red' : pct < 85 ? 'yellow' : 'green';
+      const title = `${arg} section`;
+      const body = `
+        ${chipSet([
+          { cls: 'active acc', label: arg, x: true },
+        ])}
+        <div class="kpi-hero ${status === 'red' ? 's-red' : ''}">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Section score</div><div class="kpi-hero-val ${status}">${pct}%</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Opportunity</div><div class="kpi-hero-val ${status}">${dollars > 0 ? money(dollars) : '—'}</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Rigs in section</div><div class="kpi-hero-val">8</div></div>
+          </div>
+        </div>
+        <div class="panel-list-head">Rigs in ${arg} — worst first</div>
+        ${rigCard(RIGS[0], 0)}
+        ${rigCard(RIGS[1], 1)}
+        ${rigCard(RIGS[2], 2)}
+        ${rigCard(RIGS[3], 3)}
+        ${rigCard(RIGS[5], 5)}
+        ${rigCard(RIGS[9], 9)}
+        <div class="panel-list-head">KPIs dragging this section</div>
+        ${kpiCard({ name: 'On Bottom ROP', group: 'ROP group',     pct: 21, actual: '10.86', goal: '22',  unit: 'm/hr', status: 'red',    target: 'kpi', arg: `0|On Bottom ROP|${arg}` })}
+        ${kpiCard({ name: 'Connection time', group: 'Connection',  pct: 38, actual: '3.4',   goal: '2.8', unit: 'min',  status: 'yellow', target: 'kpi', arg: `0|Connection time|${arg}` })}
+        ${kpiCard({ name: 'Slips to Bottom', group: 'Tripping',    pct: 77, actual: '14',    goal: '12',  unit: 'min',  status: 'yellow', target: 'kpi', arg: `0|Slips to Bottom|${arg}` })}
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     RIG PANEL — opened from any rig click
+     ------------------------------------------------------------------ */
+  'rig': {
+    label: (arg) => RIGS[parseInt(arg, 10)].name,
+    fn: (arg) => {
+      const idx = parseInt(arg, 10);
+      const r = RIGS[idx];
+      const title = r.name;
+      // Fleet stats for the comparison strip
+      const fleetAvg = Math.round(RIGS.reduce((s, x) => s + x.pct, 0) / RIGS.length);
+      const bestRig  = RIGS.reduce((b, x) => x.pct > b.pct ? x : b);
+      const sortedDesc = [...RIGS].sort((a, b) => b.pct - a.pct);
+      const rankOf   = sortedDesc.indexOf(r) + 1;
+      // Build a stratified KPI list for the rig
+      const body = `
+        ${chipSet([
+          { cls: 'active acc', label: r.name, x: true, action: 'rig-remove-rig' },
+          { cls: `active ${r.status === 'red' ? '' : r.status === 'yellow' ? 'warn' : 'suc'}`, label: r.chip, x: true, action: 'rig-remove-status' },
+        ])}
+        <div class="kpi-hero ${r.status === 'red' ? 's-red' : ''}">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Score</div><div class="kpi-hero-val ${r.status}">${r.pct}%</div><div class="kpi-hero-unit">${r.dir === 'up' ? '+' : ''}${r.delta} pts vs prev · rank ${rankOf} of ${RIGS.length}</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Issues</div><div class="kpi-hero-val">10</div><div class="kpi-hero-unit">across 3 sections</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Opportunity</div><div class="kpi-hero-val red">$42k</div><div class="kpi-hero-unit">if all gaps closed</div></div>
+          </div>
+
+          <!-- vs Fleet / vs Best comparison strip -->
+          <div class="rig-compare">
+            <div class="rig-compare-track">
+              <div class="rig-compare-bar"></div>
+              <div class="rig-compare-dot you s-${r.status}" style="left:${r.pct}%">
+                <div class="pin"></div>
+                <div class="lbl">${r.pct}%</div>
+              </div>
+              <div class="rig-compare-dot avg" style="left:${fleetAvg}%">
+                <div class="pin"></div>
+                <div class="lbl">${fleetAvg}%</div>
+              </div>
+              <div class="rig-compare-dot best" style="left:${bestRig.pct}%">
+                <div class="pin"></div>
+                <div class="lbl">${bestRig.pct}%</div>
+              </div>
+            </div>
+            <div class="rig-compare-legend">
+              <span><span class="dot" style="background: var(--${r.status === 'red' ? 'error' : r.status === 'yellow' ? 'warning' : 'success'})"></span>You</span>
+              <span><span class="dot" style="background: var(--text-secondary)"></span>Fleet avg</span>
+              <span><span class="dot" style="background: var(--success)"></span>Best (${bestRig.name})</span>
+            </div>
+          </div>
+        </div>
+        <button class="compare-btn"><svg><use href="#ic-compare"/></svg>Compare</button>
+        <div class="panel-list-head">8.5V section — 3 issues</div>
+        ${kpiCard({ name: 'On Bottom ROP',   group: 'ROP group',     pct: 21, actual: '10.86', goal: '22',  unit: 'm/hr', status: 'red',    target: 'kpi', arg: `${idx}|On Bottom ROP|8.5V` })}
+        ${kpiCard({ name: 'Weight to Weight', group: 'Tripping group',pct: 38, actual: '19',    goal: '12',  unit: 'min',  status: 'red',    target: 'kpi', arg: `${idx}|Weight to Weight|8.5V` })}
+        ${kpiCard({ name: 'Slips to Bottom', group: 'Tripping group',pct: 77, actual: '14',    goal: '12',  unit: 'min',  status: 'yellow', target: 'kpi', arg: `${idx}|Slips to Bottom|8.5V` })}
+        <div class="panel-list-head">12" section — 1 issue</div>
+        ${kpiCard({ name: 'Connection time', group: 'Connection group',pct: 21, actual: '3.4', goal: '2.8', unit: 'min', status: 'red', target: 'kpi', arg: `${idx}|Connection time|12"` })}
+        <div class="panel-list-head">16" section — 6 issues</div>
+        ${kpiCard({ name: 'On Bottom ROP',   group: 'ROP group',      pct: 21, actual: '10.86', goal: '22',  unit: 'm/hr', status: 'red',    target: 'kpi', arg: `${idx}|On Bottom ROP|16"` })}
+        ${kpiCard({ name: 'Weight to Weight', group: 'Tripping group', pct: 38, actual: '10.86', goal: '22',  unit: 'm/hr', status: 'red',    target: 'kpi', arg: `${idx}|Weight to Weight|16"` })}
+        ${kpiCard({ name: 'Slips to Bottom', group: 'Tripping group',  pct: 38, actual: '14',    goal: '12',  unit: 'min',  status: 'yellow', target: 'kpi', arg: `${idx}|Slips to Bottom|16"` })}
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     KPI PANEL — drill-down from rig
+     ------------------------------------------------------------------ */
+  'kpi': {
+    label: (arg) => {
+      const [, kpi] = (arg || '').split('|');
+      return kpi || 'KPI';
+    },
+    fn: (arg) => {
+      const [idxStr, kpi, section] = (arg || '|On Bottom ROP|8.5V').split('|');
+      const idx = parseInt(idxStr || '0', 10);
+      const r = RIGS[idx];
+      const title = kpi;
+      const body = `
+        ${chipSet([
+          { cls: 'active acc', label: r.name, x: true },
+          { cls: 'active acc', label: section, x: true },
+          { cls: 'active acc', label: kpi,     x: true },
+        ])}
+        <div class="kpi-hero s-red">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Actual</div><div class="kpi-hero-val">10.86</div><div class="kpi-hero-unit">m/hr</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Goal</div><div class="kpi-hero-val green">22</div><div class="kpi-hero-unit">m/hr</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Score</div><div class="kpi-hero-val red">21%</div><div class="kpi-hero-unit">Act now</div></div>
+          </div>
+          <button class="improve-btn"><svg class="svg-ico"><use href="#ic-trend-up"/></svg>SEND IMPROVEMENT</button>
+        </div>
+        <div class="trend-block">
+          <div class="trend-label">Trend — last 14 days</div>
+          <div class="trend-bars">
+            ${['g','g','g','g','y','y','y','y','y','y','r','r','r','r'].map(c => `<div class="trend-bar ${c}" style="height:${30 + Math.random()*50}%;"></div>`).join('')}
+          </div>
+          <div class="trend-axis"><span>May 6</span><span>May 13</span><span>May 20</span></div>
+        </div>
+        <div class="panel-list-head">Same KPI — other sections on this rig</div>
+        <button class="rig-card s-green" data-panel="kpi" data-arg="${idx}|${kpi}|16&quot;">
+          <div class="rig-meta"><div class="rig-name">${kpi}</div><div class="rig-sub">16"</div></div>
+          <div class="rig-right"><span class="rig-pct" style="color:var(--success)">91%</span><span style="color:var(--text-secondary);font-size:12px;">20 vs 21 m/hr</span></div>
+        </button>
+        <button class="rig-card s-yellow" data-panel="kpi" data-arg="${idx}|${kpi}|12&quot;">
+          <div class="rig-meta"><div class="rig-name">${kpi}</div><div class="rig-sub">12"</div></div>
+          <div class="rig-right"><span class="rig-pct" style="color:var(--warning)">78%</span><span style="color:var(--text-secondary);font-size:12px;">3.4 vs 2.8 m/hr</span></div>
+        </button>
+        <div class="panel-list-head">Same KPI · 8.5L — other rigs</div>
+        <button class="rig-card s-red" data-panel="kpi" data-arg="8|${kpi}|8.5L">
+          <div class="rig-meta"><div class="rig-name">Anvil 723</div><div class="rig-sub">8.5L</div></div>
+          <div class="rig-right"><span class="rig-pct" style="color:var(--error)">34%</span><span style="color:var(--text-secondary);font-size:12px;">8 vs 21 m/hr</span></div>
+        </button>
+        <button class="rig-card s-green" data-panel="kpi" data-arg="4|${kpi}|8.5L">
+          <div class="rig-meta"><div class="rig-name">Polaris 312</div><div class="rig-sub">8.5L</div></div>
+          <div class="rig-right"><span class="rig-pct" style="color:var(--success)">93%</span><span style="color:var(--text-secondary);font-size:12px;">20.5 vs 21 m/hr</span></div>
+        </button>
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     GAP CELL PANEL — opened from Performance gaps heatmap cell
+     ------------------------------------------------------------------ */
+  'gap': {
+    label: (arg) => {
+      const [kpi, section] = (arg || '').split('|');
+      return `${section} · ${kpi}`;
+    },
+    fn: (arg) => {
+      const [kpi, section, vStr, status] = (arg || '').split('|');
+      const v = parseInt(vStr || '0', 10);
+      const isEmpty = v === 0;
+      const title = `${section} · ${kpi}`;
+      const body = isEmpty ? `
+        ${chipSet([
+          { cls: 'active suc', label: section, x: true },
+          { cls: 'active acc', label: kpi, x: true },
+        ])}
+        <div class="kpi-hero">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Status</div><div class="kpi-hero-val green">On track</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Fleet avg</div><div class="kpi-hero-val">91%</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Gap</div><div class="kpi-hero-val">—</div></div>
+          </div>
+        </div>
+        <div class="panel-list-head">Top performers</div>
+        ${rigCard(RIGS[9], 9)}
+        ${rigCard(RIGS[8], 8)}
+        ${rigCard(RIGS[7], 7)}
+      ` : `
+        ${chipSet([
+          { cls: `active ${status === 'red' ? '' : 'warn'}`, label: section, x: true },
+          { cls: 'active acc', label: kpi, x: true },
+        ])}
+        <div class="kpi-hero ${status === 'red' ? 's-red' : ''}">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Loss</div><div class="kpi-hero-val ${status}">${moneyFull(v)}</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Avg actual</div><div class="kpi-hero-val">12.4</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Goal</div><div class="kpi-hero-val green">22</div></div>
+          </div>
+          <button class="improve-btn"><svg class="svg-ico"><use href="#ic-trend-up"/></svg>SEND IMPROVEMENT</button>
+        </div>
+        <div class="panel-list-head">Rigs contributing</div>
+        ${rigCard(RIGS[0], 0)}
+        ${rigCard(RIGS[1], 1)}
+        ${rigCard(RIGS[2], 2)}
+        ${rigCard(RIGS[3], 3)}
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     COMPARE — wide panel with a KPI × Rig matrix
+     ------------------------------------------------------------------ */
+  'compare': {
+    label: () => 'Compare Rigs',
+    fn: () => {
+      // Filter the selected rigs by the section filter
+      let visibleRigs = [...compareState.selectedRigs]
+        .map(i => ({ idx: i, rig: RIGS[i] }))
+        .filter(o => o.rig);
+      if (compareState.section !== 'all') {
+        visibleRigs = visibleRigs.filter(o => o.rig.section === compareState.section);
+      }
+      // Sort according to compareState.sort (same logic as Ranking)
+      if (compareState.sort === 'best')      visibleRigs.sort((a, b) => b.rig.pct - a.rig.pct);
+      else if (compareState.sort === 'az')   visibleRigs.sort((a, b) => a.rig.name.localeCompare(b.rig.name));
+      else if (compareState.sort === 'za')   visibleRigs.sort((a, b) => b.rig.name.localeCompare(a.rig.name));
+      else                                   visibleRigs.sort((a, b) => a.rig.pct - b.rig.pct);
+
+      const visibleKpis = [...compareState.selectedKpis]
+        .map(id => COMPARE_KPIS.find(k => k.id === id))
+        .filter(Boolean);
+
+      // Labels for the selectors
+      const sectionLabel = compareState.section === 'all' ? 'All Sections' : compareState.section;
+      const rigsLabel    = compareState.selectedRigs.size === RIGS.length
+                            ? 'All Rigs'
+                            : compareState.selectedRigs.size === 0
+                              ? 'None'
+                              : `${compareState.selectedRigs.size} selected`;
+      const kpisLabel    = compareState.selectedKpis.size === COMPARE_KPIS.length
+                            ? 'All KPIs'
+                            : compareState.selectedKpis.size === 0
+                              ? 'None'
+                              : `${compareState.selectedKpis.size} selected`;
+      const title = 'Compare Rigs';
+
+      const body = `
+        <div class="compare-filters">
+          <!-- Rigs selector (multi-select) -->
+          <div class="cmp-select" id="cmpRigsSelect">
+            <div class="cmp-select-label">Rigs</div>
+            <div class="cmp-select-value">
+              <span>${rigsLabel}</span>
+              <span class="chev"><svg class="svg-ico"><use href="#ic-chev-down"/></svg></span>
+            </div>
+            <div class="menu" hidden>
+              <button class="menu-item" data-rigs-all="1">${
+                compareState.selectedRigs.size === RIGS.length ? 'Deselect all' : 'Select all'
+              }</button>
+              ${RIGS.map((r, i) => {
+                const on = compareState.selectedRigs.has(i);
+                return `<button class="menu-item checkable ${on ? 'selected' : ''}" data-rig-toggle="${i}"><span class="mi-checkbox"></span>${r.name}</button>`;
+              }).join('')}
+            </div>
+          </div>
+          <!-- Section selector (single-select) -->
+          <div class="cmp-select" id="cmpSectionSelect">
+            <div class="cmp-select-label">Section</div>
+            <div class="cmp-select-value">
+              <span>${sectionLabel}</span>
+              <span class="chev"><svg class="svg-ico"><use href="#ic-chev-down"/></svg></span>
+            </div>
+            <div class="menu" hidden>
+              <button class="menu-item${compareState.section==='all'?' active':''}" data-section="all">All Sections</button>
+              <button class="menu-item${compareState.section==='8.5L'?' active':''}" data-section="8.5L">8.5L</button>
+              <button class="menu-item${compareState.section==='8.5V'?' active':''}" data-section="8.5V">8.5V</button>
+              <button class="menu-item${compareState.section==='24"'?' active':''}" data-section='24"'>24"</button>
+              <button class="menu-item${compareState.section==='12"'?' active':''}" data-section='12"'>12"</button>
+              <button class="menu-item${compareState.section==='16"'?' active':''}" data-section='16"'>16"</button>
+              <button class="menu-item${compareState.section==='22"'?' active':''}" data-section='22"'>22"</button>
+            </div>
+          </div>
+          <!-- KPIs selector (multi-select) -->
+          <div class="cmp-select" id="cmpKpisSelect">
+            <div class="cmp-select-label">KPIs</div>
+            <div class="cmp-select-value">
+              <span>${kpisLabel}</span>
+              <span class="chev"><svg class="svg-ico"><use href="#ic-chev-down"/></svg></span>
+            </div>
+            <div class="menu" hidden>
+              <button class="menu-item" data-kpis-all="1">${
+                compareState.selectedKpis.size === COMPARE_KPIS.length ? 'Deselect all' : 'Select all'
+              }</button>
+              ${COMPARE_KPIS.map(k => {
+                const on = compareState.selectedKpis.has(k.id);
+                return `<button class="menu-item checkable ${on ? 'selected' : ''}" data-kpi-toggle="${k.id}"><span class="mi-checkbox"></span>${k.name}</button>`;
+              }).join('')}
+            </div>
+          </div>
+          <!-- Sort icon (mirrors Ranking's sort) -->
+          <div class="menu-anchor">
+            <button class="menu-trigger menu-trigger-icon" id="cmpSortBtn" title="Sort">
+              <svg class="svg-ico-20"><use href="#ic-sort"/></svg>
+            </button>
+            <div class="menu" id="cmpSortMenu" hidden>
+              <button class="menu-item${compareState.sort==='worst'?' active':''}" data-sort="worst">Worst First</button>
+              <button class="menu-item${compareState.sort==='best'?' active':''}"  data-sort="best">Best First</button>
+              <button class="menu-item${compareState.sort==='az'?' active':''}"    data-sort="az">A–Z</button>
+              <button class="menu-item${compareState.sort==='za'?' active':''}"    data-sort="za">Z–A</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="compare-matrix-wrap">
+          ${visibleKpis.length === 0
+            ? `<div style="color: var(--text-muted); padding: 24px; text-align: center;">Select at least one KPI to compare</div>`
+            : visibleRigs.length === 0
+            ? `<div style="color: var(--text-muted); padding: 24px; text-align: center;">No rigs match the current filters</div>`
+            : `
+            <div class="compare-matrix" style="--cols: ${visibleKpis.length};">
+              <div></div>
+              ${visibleKpis.map(k => `
+                <div class="compare-col-head">
+                  <div class="compare-col-name">${k.name}</div>
+                  <div class="compare-col-group">${k.group} · goal ${k.goal} ${k.unit}</div>
+                </div>
+              `).join('')}
+              ${visibleRigs.map(({ idx, rig }) => `
+                <div class="compare-row-head">
+                  <div class="compare-rig-name">${rig.name}</div>
+                  <div class="compare-rig-sub">${rig.section} · ${rig.pct}%</div>
+                </div>
+                ${visibleKpis.map(k => {
+                  const v = (KPI_VALUES[idx] || {})[k.id];
+                  if (!v) return `<div class="compare-cell empty"><span class="cell-empty">—</span></div>`;
+                  const st = scoreStatus(v.s);
+                  return `
+                    <button class="compare-cell s-${st}" data-panel="kpi" data-arg="${idx}|${attr(k.name)}|${attr(rig.section)}">
+                      <div class="cell-score">${v.s}%</div>
+                      <div class="cell-actual">${v.a} <span class="unit">${k.unit}</span></div>
+                      <div class="cell-bar"><div style="width:${Math.min(100, v.s)}%"></div></div>
+                    </button>
+                  `;
+                }).join('')}
+              `).join('')}
+            </div>`}
+        </div>
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     IMPROVEMENT DETAIL — opened from Improvements activity rows
+     ------------------------------------------------------------------ */
+  'improvement': {
+    label: (arg) => {
+      const imp = IMPROVEMENTS[parseInt(arg, 10)];
+      return imp ? imp.kpi : 'Improvement';
+    },
+    fn: (arg) => {
+      const imp = IMPROVEMENTS[parseInt(arg, 10)];
+      const status = STATUSES[imp.status];
+      const isCaptured = imp.type === 'captured';
+      const isClosed   = imp.status === 'captured' || imp.status === 'dismissed';
+      const statusChipCls = status.chip === 'green'  ? 'suc'
+                          : status.chip === 'yellow' ? 'warn'
+                          : status.chip === 'accent' ? 'acc' : '';
+      // status timeline rows — show only the steps that have happened
+      const timelineRows = [];
+      timelineRows.push({ label: 'Sent',             at: `${imp.date}, 9:14 AM`, color: 'var(--text-secondary)' });
+      if (['viewed','inprogress','captured'].includes(imp.status)) {
+        timelineRows.push({ label: 'Viewed by crew', at: `${imp.date}, 11:02 AM`, color: 'var(--accent)' });
+      }
+      if (['inprogress','captured'].includes(imp.status)) {
+        timelineRows.push({ label: 'In progress',    at: `${imp.date}, 2:30 PM`,  color: 'var(--warning)' });
+      }
+      if (imp.status === 'captured') {
+        timelineRows.push({ label: 'Captured',       at: imp.date,                color: 'var(--success)' });
+      }
+      if (imp.status === 'dismissed') {
+        timelineRows.push({ label: 'Dismissed by crew', at: imp.date,             color: 'var(--text-muted)' });
+      }
+      const title = imp.kpi;
+      const body = `
+        ${chipSet([
+          { cls: 'active acc', label: imp.rig,     x: true },
+          { cls: 'active acc', label: imp.section, x: true },
+          { cls: `active ${statusChipCls}`, label: status.label, x: true },
+        ])}
+        <div class="kpi-hero ${imp.kpiStatus === 'red' ? 's-red' : imp.kpiStatus === 'yellow' ? 's-yellow' : ''}">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col">
+              <div class="kpi-hero-label">${isCaptured ? 'Captured' : 'Potential'}</div>
+              <div class="kpi-hero-val ${isCaptured ? 'green' : (imp.kpiStatus === 'red' ? 'red' : 'yellow')}">$${imp.amount.toLocaleString()}</div>
+              <div class="kpi-hero-unit">${imp.section}</div>
+            </div>
+            <div class="kpi-hero-col">
+              <div class="kpi-hero-label">Actual</div>
+              <div class="kpi-hero-val">10.86</div>
+              <div class="kpi-hero-unit">m/hr</div>
+            </div>
+            <div class="kpi-hero-col">
+              <div class="kpi-hero-label">Goal</div>
+              <div class="kpi-hero-val green">22</div>
+              <div class="kpi-hero-unit">m/hr</div>
+            </div>
+          </div>
+          ${isClosed
+            ? `<button class="improve-btn success"><svg class="svg-ico"><use href="#ic-imp"/></svg>${imp.status === 'captured' ? 'VIEW RESULTS' : 'REOPEN IMPROVEMENT'}</button>`
+            : `<button class="improve-btn"><svg class="svg-ico"><use href="#ic-trend-up"/></svg>${imp.status === 'sent' ? 'NUDGE CREW' : 'MARK AS CAPTURED'}</button>`}
+        </div>
+
+        <div class="panel-list-head">Status timeline</div>
+        <div class="trend-block" style="padding: 12px 16px;">
+          ${timelineRows.map(r => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--w8);font-size:12px;color:${r.color};">
+              <span style="font-weight:500;">${r.label}</span>
+              <span style="color:var(--text-muted);font-weight:400;">${r.at}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="panel-list-head">Message sent to crew</div>
+        <div class="trend-block" style="font-size:13px;line-height:20px;color:var(--text-secondary);">
+          "Hey team — if we can hit the ${imp.kpi} target in ${imp.section}, that's roughly $${imp.amount.toLocaleString()} on this well. Let's push for it on the next stand. — Max"
+        </div>
+
+        <div class="panel-list-head">Related KPI</div>
+        <button class="kpi-card" data-panel="kpi" data-arg="${imp.rigIdx}|${attr(imp.kpi)}|${attr(imp.section)}">
+          <div>
+            <div class="kpi-name">${imp.kpi}</div>
+            <div class="kpi-group">${imp.rig} / ${imp.section}</div>
+          </div>
+          <div class="kpi-right">
+            <div style="text-align:right">
+              <div class="kpi-value ${imp.kpiStatus === 'red' ? 'red' : 'yellow'}">${imp.kpiStatus === 'red' ? '21%' : '38%'}</div>
+              <div class="kpi-actual">10.86 <span class="muted">vs</span> 22 <span class="muted">m/hr</span></div>
+            </div>
+            <span class="kpi-improve" title="Open KPI"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+          </div>
+        </button>
+      `;
+      return { title, body };
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     DAYS SAVED + SAVINGS POTENTIAL — clicked from Time & Cost card
+     ------------------------------------------------------------------ */
+  'days-saved': {
+    label: () => 'Days saved',
+    fn: () => PANELS['news-days-saved'].fn()
+  },
+  'savings-potential': {
+    label: () => 'Savings potential',
+    fn: () => {
+      const title = 'Savings potential';
+      const body = `
+        ${chipSet([
+          { cls: 'active acc', label: '$126k', x: true },
+        ])}
+        <div class="kpi-hero">
+          <div class="kpi-hero-row">
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Total potential</div><div class="kpi-hero-val accent" style="color:var(--accent)">$126k</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Open gaps</div><div class="kpi-hero-val">17</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Across rigs</div><div class="kpi-hero-val">9</div></div>
+          </div>
+        </div>
+        <div class="panel-list-head">Biggest opportunities</div>
+        <button class="p-card s-red" data-panel="gap" data-arg="ROP|8.5L|42403|red">
+          <div class="p-card-head">
+            <div>
+              <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>8.5L · ROP</div>
+              <div class="p-card-sub">4 rigs contributing</div>
+            </div>
+            <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+          </div>
+          <div class="delta-row">
+            <span class="delta-to red">$42,403</span>
+            <span class="delta-chip chip red">Act now</span>
+          </div>
+        </button>
+        <button class="p-card s-red" data-panel="gap" data-arg="Tripping|8.5L|42403|red">
+          <div class="p-card-head">
+            <div>
+              <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>8.5L · Tripping</div>
+              <div class="p-card-sub">3 rigs contributing</div>
+            </div>
+            <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+          </div>
+          <div class="delta-row">
+            <span class="delta-to red">$42,403</span>
+            <span class="delta-chip chip red">Act now</span>
+          </div>
+        </button>
+        <button class="p-card s-red" data-panel="gap" data-arg="Tripping|16&quot;|42403|red">
+          <div class="p-card-head">
+            <div>
+              <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>16" · Tripping</div>
+              <div class="p-card-sub">5 rigs contributing</div>
+            </div>
+            <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+          </div>
+          <div class="delta-row">
+            <span class="delta-to red">$42,403</span>
+            <span class="delta-chip chip red">Act now</span>
+          </div>
+        </button>
+        <button class="p-card s-yellow" data-panel="gap" data-arg="Tripping|22&quot;|21498|yellow">
+          <div class="p-card-head">
+            <div>
+              <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>22" · Tripping</div>
+              <div class="p-card-sub">2 rigs contributing</div>
+            </div>
+            <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
+          </div>
+          <div class="delta-row">
+            <span class="delta-to yellow">$21,498</span>
+            <span class="delta-chip chip yellow">Watch</span>
+          </div>
+        </button>
+      `;
+      return { title, body };
+    }
+  },
+
+};
+
+/* Wrap renderers so `render()` can call them uniformly */
+Object.keys(PANELS).forEach(k => {
+  const p = PANELS[k];
+  const orig = p.fn;
+  p.body = (arg) => orig(arg).body;
+  p.title = (arg) => orig(arg).title;
+});
+function originalRender() {
+  const top = navStack[navStack.length - 1];
+  const p = PANELS[top.panelId];
+  if (!p) return;
+  // Compare panel uses a wider layout; everything else uses default width
+  if (top.panelId === 'compare') panel.setAttribute('data-mode', 'wide');
+  else                            panel.removeAttribute('data-mode');
+  panelBody.innerHTML = p.body(top.arg);
+  // Build breadcrumb
+  const bc = navStack.map(n => ({ label: PANELS[n.panelId].label(n.arg) }));
+  renderBreadcrumb(bc);
+  attachPanelClicks();
+}
+// Override
+window.render = render;
+function render() { originalRender(); }
+
+/* ========================================================================
+   TOOLTIPS
+   Add data-tip-type (and optionally data-tip-arg) to any element and a
+   rich tooltip will appear on hover. Content is built by buildTipHTML().
+   ======================================================================== */
+const TIP = document.getElementById('tooltip');
+let tipCurrent = null;
+function colorFor(status) {
+  return status === 'red'    ? 'var(--error)'
+       : status === 'yellow' ? 'var(--warning)'
+       : status === 'green'  ? 'var(--success)'
+       : 'var(--text-secondary)';
+}
+function statusName(status) {
+  return status === 'red'    ? 'Act Now'
+       : status === 'yellow' ? 'Watch'
+       : status === 'green'  ? 'On Track'
+       : '';
+}
+function buildTipHTML(el) {
+  const type = el.dataset.tipType;
+  const arg  = el.dataset.tipArg || '';
+  switch (type) {
+    case 'fleet-score': {
+      return `
+        <div class="tip-title">Fleet Score</div>
+        <div class="tip-row"><span class="label">Score:</span><span class="value">79%</span></div>
+        <div class="tip-row"><span class="label">vs last month:</span><span class="value" style="color:var(--success)">+4 pts</span></div>
+        <div class="tip-row"><span class="label">22 active wells</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click for trend & section breakdown</div>`;
+    }
+    case 'fleet-section': {
+      // arg = "8.5V|62"
+      const [sec, pStr] = arg.split('|');
+      const p = parseInt(pStr, 10);
+      const st = p < 70 ? 'red' : p < 85 ? 'yellow' : 'green';
+      return `
+        <div class="tip-title">${sec} section</div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Score:</span><span class="value">${p}%</span></div>
+        <div class="tip-row"><span class="label">Status:</span><span class="value" style="color:${colorFor(st)}">${statusName(st)}</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click to see rigs in this section</div>`;
+    }
+    case 'rig': {
+      const r = RIGS[parseInt(arg, 10)];
+      if (!r) return '';
+      // Use the count of red+yellow KPIs as "issues" — keep simple
+      const vals = KPI_VALUES[parseInt(arg,10)] || {};
+      const issues = Object.values(vals).filter(v => v.s < 80).length;
+      return `
+        <div class="tip-title">${r.name}</div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(r.status)}"></span><span class="label">Score:</span><span class="value">${r.pct}%</span></div>
+        <div class="tip-row"><span class="label">Section:</span><span class="value">${r.section}</span></div>
+        <div class="tip-row"><span class="label">Status:</span><span class="value" style="color:${colorFor(r.status)}">${r.chip}</span></div>
+        <div class="tip-row"><span class="label">Issues:</span><span class="value">${issues} KPI${issues===1?'':'s'} below 80%</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click for full breakdown</div>`;
+    }
+    case 'days-saved': {
+      return `
+        <div class="tip-title">Days saved</div>
+        <div class="tip-row"><span class="dot" style="background:var(--success)"></span><span class="label">Captured:</span><span class="value">0.3 d · $17,837</span></div>
+        <div class="tip-row"><span class="label">Of total:</span><span class="value">7.4 d / $144k possible</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click for trend & top contributors</div>`;
+    }
+    case 'savings-pot': {
+      return `
+        <div class="tip-title">Savings potential</div>
+        <div class="tip-row"><span class="dot" style="background:var(--warning)"></span><span class="label">Untapped:</span><span class="value">$126k · 7.1 d</span></div>
+        <div class="tip-row"><span class="label">If all current gaps closed</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click to see biggest opportunities</div>`;
+    }
+    case 'opp-section': {
+      // arg = "8.5V|42000|red"
+      const [sec, vStr, st] = arg.split('|');
+      const v = parseInt(vStr, 10);
+      return `
+        <div class="tip-title">${sec} section</div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Possible savings:</span><span class="value" style="color:${colorFor(st)}">$${v.toLocaleString()}</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click to see worst rigs in this section</div>`;
+    }
+    case 'gap-cell': {
+      // arg = "ROP|8.5L|42403|red"
+      const [kpi, sec, vStr, st] = arg.split('|');
+      const v = parseInt(vStr, 10);
+      if (v === 0) {
+        return `
+          <div class="tip-title">${sec} · ${kpi}</div>
+          <div class="tip-row"><span class="dot" style="background:var(--success)"></span><span class="label">Status:</span><span class="value" style="color:var(--success)">On Track</span></div>
+          <div class="tip-divider"></div>
+          <div class="tip-hint">Click to see top performers</div>`;
+      }
+      return `
+        <div class="tip-title">${sec} · ${kpi}</div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Loss:</span><span class="value" style="color:${colorFor(st)}">$${v.toLocaleString()}</span></div>
+        <div class="tip-row"><span class="label">Status:</span><span class="value" style="color:${colorFor(st)}">${statusName(st)}</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click to see contributing rigs</div>`;
+    }
+    case 'action': {
+      return `<div class="tip-hint">Click to open KPI details and send an improvement</div>`;
+    }
+    case 'improvement': {
+      return `<div class="tip-hint">Click to see status, timeline, and message sent to crew</div>`;
+    }
+    case 'news-fleet-perf':
+      return `<div class="tip-title">Fleet performance</div>
+              <div class="tip-row"><span class="label">vs last month:</span><span class="value" style="color:var(--success)">+4 pts</span></div>
+              <div class="tip-divider"></div>
+              <div class="tip-hint">Click to see what drove the change</div>`;
+    case 'news-act-now':
+      return `<div class="tip-title">Act Now movers</div>
+              <div class="tip-row"><span class="label">3 rigs</span> <span class="value" style="color:var(--error)">dropped this week</span></div>
+              <div class="tip-divider"></div>
+              <div class="tip-hint">Click to see which rigs and why</div>`;
+    case 'news-biggest-gap':
+      return `<div class="tip-title">Biggest gap</div>
+              <div class="tip-row"><span class="label">8.5V · ROP:</span><span class="value" style="color:var(--warning)">$42k loss</span></div>
+              <div class="tip-divider"></div>
+              <div class="tip-hint">Click to see contributing rigs</div>`;
+    case 'news-days-saved':
+      return `<div class="tip-title">Days saved this period</div>
+              <div class="tip-row"><span class="label">Saved:</span><span class="value" style="color:var(--success)">0.3 d (vs 0.1 d)</span></div>
+              <div class="tip-divider"></div>
+              <div class="tip-hint">Click to see trend and contributors</div>`;
+  }
+  return '';
+}
+function positionTip(el) {
+  const rect = el.getBoundingClientRect();
+  // Measure off-screen first
+  TIP.style.left = '-9999px';
+  TIP.style.top  = '0px';
+  const tipRect = TIP.getBoundingClientRect();
+  let x = rect.left + rect.width / 2 - tipRect.width / 2;
+  let y = rect.bottom + 8;
+  if (x < 8) x = 8;
+  if (x + tipRect.width > window.innerWidth - 8) x = window.innerWidth - tipRect.width - 8;
+  if (y + tipRect.height > window.innerHeight - 8) y = rect.top - tipRect.height - 8;
+  TIP.style.left = x + 'px';
+  TIP.style.top  = y + 'px';
+}
+function showTip(el) {
+  if (tipCurrent === el) return;
+  const html = buildTipHTML(el);
+  if (!html) return;
+  tipCurrent = el;
+  TIP.innerHTML = html;
+  TIP.hidden = false;
+  positionTip(el);
+  requestAnimationFrame(() => TIP.classList.add('show'));
+}
+function hideTip() {
+  tipCurrent = null;
+  TIP.classList.remove('show');
+  TIP.hidden = true;
+}
+document.body.addEventListener('mouseover', (e) => {
+  const target = e.target.closest('[data-tip-type]');
+  if (target) showTip(target);
+});
+document.body.addEventListener('mouseout', (e) => {
+  const target = e.target.closest('[data-tip-type]');
+  if (!target) return;
+  const related = e.relatedTarget && e.relatedTarget.closest('[data-tip-type]');
+  if (related !== target) hideTip();
+});
+// Hide on any click or scroll
+document.body.addEventListener('click', () => hideTip());
+window.addEventListener('scroll', () => hideTip(), true);
+</script>
+</body>
+</html>

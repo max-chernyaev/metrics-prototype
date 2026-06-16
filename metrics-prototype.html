@@ -161,30 +161,66 @@
      ==================================================================== */
   .filters {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 16px;
     margin-bottom: 24px;
   }
-  .select {
+  /* Compact filter — 12px label above a 32px field with a chevron. */
+  .filter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     flex: 1;
+    min-width: 140px;
+    max-width: 200px;
+  }
+  .filter-label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-muted);
+  }
+  .filter .menu-anchor { width: 100%; display: block; }
+  .filter-btn {
+    width: 100%;
+    height: 32px;
     background: var(--w4);
     border: 1px solid var(--w8);
-    border-radius: 8px;
-    padding: 8px 12px;
-    min-width: 160px;
-    max-width: 200px;
-    height: 52px;
-    display: flex; flex-direction: column; justify-content: center;
-    position: relative;
+    border-radius: 6px;
+    padding: 0 10px 0 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
   }
-  .select .label { font-size: 12px; line-height: 16px; color: var(--text-muted); }
-  .select .value { font-size: 14px; line-height: 20px; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; }
-  .select .value::after {
-    content: ""; width: 8px; height: 8px;
-    border-right: 1.5px solid var(--text-secondary);
-    border-bottom: 1.5px solid var(--text-secondary);
-    transform: rotate(45deg);
-    margin-right: 4px;
+  .filter-btn:hover {
+    background: var(--w8);
+    border-color: var(--w16);
+  }
+  .filter-btn > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+  }
+  .filter-btn .chev {
+    color: var(--text-secondary);
+    display: inline-flex; align-items: center;
+    flex-shrink: 0;
+  }
+  .filter-btn .chev svg { width: 16px; height: 16px; }
+  /* Menu for the page-level filters drops below the full-width button */
+  .filter .menu {
+    top: calc(100% + 4px);
+    left: 0;
+    right: auto;
+    min-width: 100%;
+    max-height: 320px;
+    overflow-y: auto;
   }
   .switches { display: flex; gap: 24px; padding-left: 8px; }
   .switch {
@@ -493,6 +529,10 @@
   .fs-section.s-red    { background: var(--error-bg); border-color: rgba(255,67,54,0.15); }
   .fs-section.s-yellow { background: var(--warning-bg); border-color: rgba(255,193,7,0.15); }
   .fs-section.s-green  { background: var(--success-bg); border-color: rgba(117,219,41,0.15); }
+  /* Section pill for a section the current Program doesn't drill — */
+  /* rendered muted/greyed with an em-dash value. */
+  .fs-section.s-muted  { background: var(--w4); border-color: var(--w8); cursor: default; opacity: 0.45; }
+  .fs-section.s-muted .val { color: var(--text-muted); }
   .legend {
     display: flex; gap: 16px;
     margin-top: 12px;
@@ -768,8 +808,11 @@
     border-radius: 8px;
     padding: 8px 16px;
     display: grid;
-    grid-template-columns: 24px 1fr auto auto 36px;
-    gap: 16px;
+    /* 5 cells: severity · name+sub · KPI value · time · trailing
+       (trailing is either the arrow on Top Actions or the chip on
+       Improvements) */
+    grid-template-columns: 24px 1fr auto auto auto;
+    gap: 14px;
     align-items: center;
     position: relative;
     cursor: pointer;
@@ -798,9 +841,27 @@
   .action-card.s-yellow .severity { color: var(--warning); }
   .action-card .ac-name { font-size: 14px; color: var(--text-primary); }
   .action-card .ac-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .action-card .ac-potential { font-size: 12px; color: var(--text-secondary); }
-  .action-card .ac-potential .amt { color: var(--error); font-weight: 500; }
-  .action-card .ac-time { color: var(--text-muted); font-size: 12px; }
+  /* KPI value (e.g., "10.86 vs 22 m/hr") — primary, status-colored. */
+  .action-card .ac-kpi {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 22px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .action-card.s-red    .ac-kpi { color: var(--error); }
+  .action-card.s-yellow .ac-kpi { color: var(--warning); }
+  .action-card.s-green  .ac-kpi { color: var(--success); }
+  .action-card .ac-kpi .ac-unit { color: var(--text-muted); font-weight: 400; font-size: 13px; }
+  .action-card .ac-kpi .ac-vs   { color: var(--text-muted); font-weight: 400; font-size: 14px; }
+  /* Time impact (e.g., "0.28 d") — same big size as KPI but greyed. */
+  .action-card .ac-time {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 22px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
   /* ac-improve is now a decorative affordance — the whole card is the
      click target; the panel that opens contains the real "Improve" CTA */
   .action-card .ac-improve {
@@ -876,7 +937,7 @@
   /* Wide mode for the Compare panel — needs more horizontal room
      for the KPI × Rig matrix. */
   .panel[data-mode="wide"] {
-    width: 720px;
+    width: 900px;
     max-width: calc(100vw - 32px);
   }
 
@@ -892,7 +953,8 @@
   }
   .panel-breadcrumb {
     display: flex; align-items: center; gap: 6px;
-    font-size: 14px;
+    font-size: 16px;
+    line-height: 22px;
     font-weight: 500;
     color: var(--text-primary);
     flex: 1;
@@ -909,6 +971,13 @@
   .panel-breadcrumb .crumb:hover { color: var(--text-primary); text-decoration: underline; }
   .panel-breadcrumb .sep { color: var(--text-muted); font-weight: 400; }
   .panel-breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+  /* Category prefix (Rig: / Section: / KPI:) — grey, regular weight,
+     shown for "atom entity" panels. */
+  .panel-breadcrumb .cat {
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-right: 4px;
+  }
   .panel-close {
     width: 32px; height: 32px;
     border-radius: 6px;
@@ -1329,7 +1398,9 @@
   }
   .compare-matrix {
     display: grid;
-    grid-template-columns: 140px repeat(var(--cols, 3), minmax(120px, 1fr));
+    /* Tighter grid — fits all 6 KPI columns in the 900px panel without
+       horizontal scrolling at default selection. */
+    grid-template-columns: 120px repeat(var(--cols, 3), 1fr);
     gap: 6px;
     align-items: stretch;
     min-width: max-content;
@@ -1395,20 +1466,35 @@
     cursor: default;
   }
 
-  .compare-cell .cell-score {
+  /* Actual value = big, status-colored — the user wants the KPI result
+     to be the most visible element. */
+  .compare-cell .cell-actual {
     font-size: 16px;
     font-weight: 500;
     line-height: 20px;
+    white-space: nowrap;
   }
-  .compare-cell.s-red    .cell-score { color: var(--error); }
-  .compare-cell.s-yellow .cell-score { color: var(--warning); }
-  .compare-cell.s-green  .cell-score { color: var(--success); }
-  .compare-cell .cell-actual {
+  .compare-cell.s-red    .cell-actual { color: var(--error); }
+  .compare-cell.s-yellow .cell-actual { color: var(--warning); }
+  .compare-cell.s-green  .cell-actual { color: var(--success); }
+  .compare-cell .cell-actual .unit {
+    color: var(--text-muted);
     font-size: 12px;
-    color: var(--text-secondary);
-    line-height: 16px;
+    font-weight: 400;
+    margin-left: 2px;
   }
-  .compare-cell .cell-actual .unit { color: var(--text-muted); }
+  /* Score % + delta line — small, secondary */
+  .compare-cell .cell-meta {
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .compare-cell .cell-meta .score { color: var(--text-secondary); font-weight: 500; }
+  .compare-cell .cell-meta .delta { display: inline-flex; align-items: center; gap: 2px; }
+  .compare-cell .cell-meta .delta.up   { color: var(--success); }
+  .compare-cell .cell-meta .delta.down { color: var(--error); }
   .compare-cell .cell-bar {
     height: 4px;
     background: var(--w8);
@@ -1618,12 +1704,55 @@
 
     <!-- ============= FILTERS =============================================== -->
     <div class="filters">
-      <div class="select"><div class="label">Life Cycle</div><div class="value">Drilling</div></div>
-      <div class="select"><div class="label">Program</div><div class="value">All</div></div>
-      <div class="select"><div class="label">Time Range</div><div class="value">Last 30 days</div></div>
-      <div class="select"><div class="label">KPIs</div><div class="value">9 selected</div></div>
+      <div class="filter">
+        <div class="filter-label">Life Cycle</div>
+        <div class="menu-anchor">
+          <button class="filter-btn" id="fLifeBtn"><span id="fLifeLabel">Drilling</span><span class="chev"><svg><use href="#ic-chev-down"/></svg></span></button>
+          <div class="menu" id="fLifeMenu" hidden>
+            <button class="menu-item active" data-life="Drilling">Drilling</button>
+            <button class="menu-item" data-life="Completion">Completion</button>
+          </div>
+        </div>
+      </div>
+      <div class="filter">
+        <div class="filter-label">Program</div>
+        <div class="menu-anchor">
+          <button class="filter-btn" id="fProgBtn"><span id="fProgLabel">All</span><span class="chev"><svg><use href="#ic-chev-down"/></svg></span></button>
+          <div class="menu" id="fProgMenu" hidden>
+            <button class="menu-item active" data-program="All">All</button>
+            <button class="menu-item" data-program="Alaska">Alaska</button>
+            <button class="menu-item" data-program="Canada">Canada</button>
+            <button class="menu-item" data-program="Norway">Norway</button>
+          </div>
+        </div>
+      </div>
+      <div class="filter">
+        <div class="filter-label">Time Range</div>
+        <div class="menu-anchor">
+          <button class="filter-btn" id="fTimeBtn"><span id="fTimeLabel">Last week</span><span class="chev"><svg><use href="#ic-chev-down"/></svg></span></button>
+          <div class="menu" id="fTimeMenu" hidden>
+            <button class="menu-item active" data-time="Last week">Last week</button>
+            <button class="menu-item" data-time="Last 30 days">Last 30 days</button>
+            <button class="menu-item" data-time="Last 6 months">Last 6 months</button>
+          </div>
+        </div>
+      </div>
+      <div class="filter">
+        <div class="filter-label">KPIs</div>
+        <div class="menu-anchor">
+          <button class="filter-btn" id="fKpisBtn"><span id="fKpisLabel">All KPIs</span><span class="chev"><svg><use href="#ic-chev-down"/></svg></span></button>
+          <div class="menu" id="fKpisMenu" hidden>
+            <button class="menu-item" data-page-kpis-all="1">Deselect all</button>
+            <button class="menu-item checkable selected" data-page-kpi="ROP"><span class="mi-checkbox"></span>ROP</button>
+            <button class="menu-item checkable selected" data-page-kpi="Connection"><span class="mi-checkbox"></span>Connection</button>
+            <button class="menu-item checkable selected" data-page-kpi="Tripping"><span class="mi-checkbox"></span>Tripping</button>
+            <button class="menu-item checkable selected" data-page-kpi="Directional"><span class="mi-checkbox"></span>Directional</button>
+            <button class="menu-item checkable selected" data-page-kpi="NPT"><span class="mi-checkbox"></span>NPT</button>
+          </div>
+        </div>
+      </div>
       <div class="switches">
-        <div class="switch on"><div class="toggle"></div>Active Wells Only</div>
+        <div class="switch on"><div class="toggle"></div>Active wells</div>
         <div class="switch"><div class="toggle"></div>Annualized</div>
       </div>
     </div>
@@ -1648,12 +1777,12 @@
       <button class="news-chip warn" data-panel="news-biggest-gap" data-tip-type="news-biggest-gap">
         <span class="ico"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
         Biggest gap <strong>8.5V • ROP</strong>
-        <span class="v-warning">$42k loss</span>
+        <span class="v-warning">2.4 d lost</span>
       </button>
       <button class="news-chip good" data-panel="news-days-saved" data-tip-type="news-days-saved">
-        <span class="ico"><svg class="svg-ico-20"><use href="#ic-dollar"/></svg></span>
-        Days Saved <span class="v-success">0.3 d</span>
-        <span class="muted">vs 0.1 d last month</span>
+        <span class="ico"><svg class="svg-ico-20"><use href="#ic-clock"/></svg></span>
+        Days Saved <span class="v-success" id="newsDaysSaved">0.1 d</span>
+        <span class="muted" id="newsDaysSavedSub">vs 0.05 d prior week</span>
       </button>
     </div>
 
@@ -1668,11 +1797,11 @@
         <button class="fs-top" data-panel="fleet-score" data-tip-type="fleet-score">
           <div class="fs-left">
             <div class="fs-bignum">
-              79<span class="pct">%</span>
-              <span class="delta">+4 pts</span>
+              <span id="fsScoreNum">79</span><span class="pct">%</span>
+              <span class="delta" id="fsDelta">+4 pts</span>
             </div>
-            <div class="fs-sub">vs 75% last month</div>
-            <div class="fs-sub-2">22 active wells</div>
+            <div class="fs-sub" id="fsSub">vs 75% last month</div>
+            <div class="fs-sub-2"><span id="fsActiveWells">22</span> active wells</div>
           </div>
           <!-- viewBox extended right (170) and down (80) so the end dot
                isn't clipped by the SVG bounds -->
@@ -1686,14 +1815,8 @@
         <div class="fs-bottom">
           <div class="card-divider"></div>
           <div class="fs-section-title">Performance by section</div>
-          <div class="fs-sections">
-            <button class="fs-section s-red"    data-panel="section" data-arg="8.5L" data-tip-type="fleet-section" data-tip-arg="8.5L|41"><div class="name">8.5L</div><div class="val">41%</div></button>
-            <button class="fs-section s-red"    data-panel="section" data-arg="8.5V" data-tip-type="fleet-section" data-tip-arg="8.5V|62"><div class="name">8.5V</div><div class="val">62%</div></button>
-            <button class="fs-section s-yellow" data-panel="section" data-arg='24"'  data-tip-type="fleet-section" data-tip-arg='24"|76'><div class="name">24"</div><div class="val">76%</div></button>
-            <button class="fs-section s-yellow" data-panel="section" data-arg='12"'  data-tip-type="fleet-section" data-tip-arg='12"|81'><div class="name">12"</div><div class="val">81%</div></button>
-            <button class="fs-section s-yellow" data-panel="section" data-arg='16"'  data-tip-type="fleet-section" data-tip-arg='16"|82'><div class="name">16"</div><div class="val">82%</div></button>
-            <button class="fs-section s-green"  data-panel="section" data-arg='22"'  data-tip-type="fleet-section" data-tip-arg='22"|91'><div class="name">22"</div><div class="val">91%</div></button>
-          </div>
+          <!-- Populated by renderSectionPills() so values change per program -->
+          <div class="fs-sections" id="fsSections"></div>
           <div class="legend">
             <span><span class="dot" style="background:var(--success)"></span>On Track</span>
             <span><span class="dot" style="background:var(--warning)"></span>Watch</span>
@@ -1712,76 +1835,40 @@
       -->
       <div class="card tc-card" data-tc-variant="A">
         <div class="card-title">
-          <span class="ico"><svg class="svg-ico-20"><use href="#ic-dollar"/></svg></span>
-          Time &amp; Cost Captured
-          <span class="spacer"></span>
-          <button class="card-action-btn" id="tcToggle" title="Switch view">
-            <svg class="svg-ico-20"><use href="#ic-toggle-view"/></svg>
-          </button>
+          <span class="ico"><svg class="svg-ico-20"><use href="#ic-clock"/></svg></span>
+          Time Captured
         </div>
 
-        <!-- ============= VARIANT A: two blocks ====================== -->
+        <!-- Time-only view — money removed for now (day-rate not configured). -->
         <div class="tc-view-a">
           <button class="tc-block" data-panel="days-saved" data-tip-type="days-saved">
             <div class="tc-row">
               <div class="tc-label">Days saved</div>
               <div class="tc-value-group">
-                <div class="tc-value-primary">0.3 d</div>
-                <div class="tc-value-secondary">$17,837</div>
+                <div class="tc-value-primary" id="tcSavedVal">0.1 d</div>
               </div>
             </div>
-            <div class="tc-bar"><div style="width:12%;background:var(--success);"></div></div>
-            <div class="tc-meta"><span>12% captured</span><span>of $144k / 7.4 d possible</span></div>
+            <div class="tc-bar"><div id="tcSavedBar" style="width:4%;background:var(--success);"></div></div>
+            <div class="tc-meta"><span id="tcSavedMeta">4% captured</span><span id="tcTotalText">of 1.9 d possible</span></div>
           </button>
 
           <button class="tc-block" data-panel="savings-potential" data-tip-type="savings-pot">
             <div class="tc-row">
-              <div class="tc-label">Savings potential</div>
+              <div class="tc-label">Days on the table</div>
               <div class="tc-value-group">
-                <div class="tc-value-primary warning">$126k</div>
-                <div class="tc-value-secondary">7.1 d</div>
+                <div class="tc-value-primary warning" id="tcPotVal">1.8 d</div>
               </div>
             </div>
-            <div class="tc-bar from-right"><div style="width:88%;background:var(--warning);"></div></div>
-            <div class="tc-meta"><span>88% on the table</span><span>of $144k / 7.4 d possible</span></div>
+            <div class="tc-bar from-right"><div id="tcPotBar" style="width:96%;background:var(--warning);"></div></div>
+            <div class="tc-meta"><span id="tcPotMeta">96% untapped</span><span id="tcTotalText2">of 1.9 d possible</span></div>
           </button>
-        </div>
-
-        <!-- ============= VARIANT B: combined stacked bar ============ -->
-        <div class="tc-view-b" hidden>
-          <div class="tc-halves">
-            <button class="tc-half tc-half-captured" data-panel="days-saved">
-              <div class="tc-half-label">Captured</div>
-              <div class="tc-value-group">
-                <div class="tc-value-primary success">0.3 d</div>
-                <div class="tc-value-secondary">$17,837 · 12%</div>
-              </div>
-            </button>
-            <button class="tc-half tc-half-potential" data-panel="savings-potential">
-              <div class="tc-half-label">Potential</div>
-              <div class="tc-value-group">
-                <div class="tc-value-primary warning">$126k</div>
-                <div class="tc-value-secondary">7.1 d · 88%</div>
-              </div>
-            </button>
-          </div>
-          <div class="tc-stacked">
-            <div style="width:12%;background:var(--success);"></div>
-            <div style="width:88%;background:var(--warning);"></div>
-          </div>
-          <div class="tc-total-line">of $144k / 7.4 d total possible</div>
         </div>
 
         <div class="card-divider"></div>
 
-        <div class="opp-title">Opportunity by section<span style="color:var(--text-muted)">Possible savings</span></div>
-        <div class="opp-list">
-          <button class="opp-row s-red"    data-panel="section" data-arg="8.5V" data-tip-type="opp-section" data-tip-arg="8.5V|42000|red"><div class="opp-name">8.5V</div><div class="opp-bar"><div style="width:96%"></div></div><div class="opp-val">$42k</div></button>
-          <button class="opp-row s-yellow" data-panel="section" data-arg="8.5L" data-tip-type="opp-section" data-tip-arg="8.5L|19000|yellow"><div class="opp-name">8.5L</div><div class="opp-bar"><div style="width:46%"></div></div><div class="opp-val">$19k</div></button>
-          <button class="opp-row s-yellow" data-panel="section" data-arg='24"'  data-tip-type="opp-section" data-tip-arg='24"|11000|yellow'><div class="opp-name">24"</div><div class="opp-bar"><div style="width:27%"></div></div><div class="opp-val">$11k</div></button>
-          <button class="opp-row s-green"  data-panel="section" data-arg='12"'  data-tip-type="opp-section" data-tip-arg='12"|9000|green'><div class="opp-name">12"</div><div class="opp-bar"><div style="width:22%"></div></div><div class="opp-val">$9k</div></button>
-          <button class="opp-row s-green"  data-panel="section" data-arg='16" Int.' data-tip-type="opp-section" data-tip-arg='16" Int.|2000|green'><div class="opp-name">16" Int.</div><div class="opp-bar"><div style="width:5%"></div></div><div class="opp-val">$2k</div></button>
-        </div>
+        <div class="opp-title">Opportunity by section<span style="color:var(--text-muted)">Days on the table</span></div>
+        <!-- Populated by renderOpportunity() so list adapts per program -->
+        <div class="opp-list" id="oppList"></div>
       </div>
 
       <!-- RANKING CARD -->
@@ -1851,55 +1938,55 @@
     <div class="cards-2" style="margin-top: 24px;">
       <div class="card">
         <div class="card-title"><span class="ico"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>Top Actions</div>
-        <div class="card-summary"><span class="v-warning">7 open</span> · <span class="v-muted">sorted by impact</span></div>
+        <div class="card-summary"><span class="v-warning">7 open</span> · <span class="v-muted">sorted by time impact</span></div>
         <div class="action-list">
-          <button class="action-card s-red" data-tip-type="action" data-panel="kpi" data-arg="0|On Bottom ROP|8.5V">
+          <button class="action-card s-red" data-program="Alaska" data-tip-type="action" data-panel="kpi" data-arg="0|On Bottom ROP|8.5V">
             <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
             <span><span class="ac-name">On Bottom ROP</span><span class="ac-sub" style="display:block">Apex 47 / 8.5V</span></span>
-            <span class="ac-potential">potential: <span class="amt">$24,298</span></span>
-            <span class="ac-time">0.28 d</span>
+            <span class="ac-kpi">10.86 <span class="ac-vs">vs</span> 22 <span class="ac-unit">m/hr</span></span>
+            <span class="ac-time">1.4 d</span>
             <span class="ac-improve" title="Improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
           </button>
-          <button class="action-card s-red" data-tip-type="action" data-panel="kpi" data-arg='1|Cased Hole Tripping in|16"'>
+          <button class="action-card s-red" data-program="Canada" data-tip-type="action" data-panel="kpi" data-arg='1|Cased Hole Tripping in|16"'>
             <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
             <span><span class="ac-name">Cased Hole Tripping in</span><span class="ac-sub" style="display:block">Vanguard 128 / 16"</span></span>
-            <span class="ac-potential">potential: <span class="amt">$13,023</span></span>
-            <span class="ac-time">0.15 d</span>
+            <span class="ac-kpi">19 <span class="ac-vs">vs</span> 12 <span class="ac-unit">min</span></span>
+            <span class="ac-time">0.7 d</span>
             <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
           </button>
-          <button class="action-card s-red" data-tip-type="action" data-panel="kpi" data-arg="2|Weight to Weight|8.5L">
+          <button class="action-card s-red" data-program="Alaska" data-tip-type="action" data-panel="kpi" data-arg="2|Weight to Weight|8.5L">
             <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
             <span><span class="ac-name">Weight to Weight</span><span class="ac-sub" style="display:block">Trident 219 / 8.5L</span></span>
-            <span class="ac-potential">potential: <span class="amt">$8,420</span></span>
-            <span class="ac-time">0.10 d</span>
+            <span class="ac-kpi">17 <span class="ac-vs">vs</span> 12 <span class="ac-unit">min</span></span>
+            <span class="ac-time">0.5 d</span>
             <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
           </button>
-          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg='2|On Bottom ROP|16"'>
+          <button class="action-card s-yellow" data-program="Alaska" data-tip-type="action" data-panel="kpi" data-arg='2|On Bottom ROP|16"'>
             <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
             <span><span class="ac-name">On Bottom ROP</span><span class="ac-sub" style="display:block">Trident 219 / 16"</span></span>
-            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$4,002</span></span>
-            <span class="ac-time">0.05 d</span>
+            <span class="ac-kpi">14.5 <span class="ac-vs">vs</span> 22 <span class="ac-unit">m/hr</span></span>
+            <span class="ac-time">0.2 d</span>
             <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
           </button>
-          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg="0|Connection time|8.5L">
+          <button class="action-card s-yellow" data-program="Alaska" data-tip-type="action" data-panel="kpi" data-arg="0|Connection time|8.5L">
             <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
             <span><span class="ac-name">Connection time</span><span class="ac-sub" style="display:block">Apex 47 / 8.5L</span></span>
-            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$3,201</span></span>
-            <span class="ac-time">0.04 d</span>
+            <span class="ac-kpi">3.4 <span class="ac-vs">vs</span> 2.8 <span class="ac-unit">min</span></span>
+            <span class="ac-time">0.2 d</span>
             <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
           </button>
-          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg="4|Weight to Weight|8.5L">
+          <button class="action-card s-yellow" data-program="Alaska" data-tip-type="action" data-panel="kpi" data-arg="4|Weight to Weight|8.5L">
             <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
             <span><span class="ac-name">Weight to Weight</span><span class="ac-sub" style="display:block">Polaris 312 / 8.5L</span></span>
-            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$2,840</span></span>
-            <span class="ac-time">0.03 d</span>
+            <span class="ac-kpi">15 <span class="ac-vs">vs</span> 12 <span class="ac-unit">min</span></span>
+            <span class="ac-time">0.1 d</span>
             <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
           </button>
-          <button class="action-card s-yellow" data-tip-type="action" data-panel="kpi" data-arg='3|Cased Hole Tripping in|16"'>
+          <button class="action-card s-yellow" data-program="Canada" data-tip-type="action" data-panel="kpi" data-arg='3|Cased Hole Tripping in|16"'>
             <span class="severity"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
             <span><span class="ac-name">Cased Hole Tripping in</span><span class="ac-sub" style="display:block">Helix 478 / 16"</span></span>
-            <span class="ac-potential">potential: <span class="amt" style="color:var(--warning)">$1,999</span></span>
-            <span class="ac-time">0.02 d</span>
+            <span class="ac-kpi">14 <span class="ac-vs">vs</span> 12 <span class="ac-unit">min</span></span>
+            <span class="ac-time">0.1 d</span>
             <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-trend-up"/></svg></span>
           </button>
         </div>
@@ -1912,7 +1999,7 @@
       <div class="card">
         <div class="card-title"><span class="ico"><svg class="svg-ico-20"><use href="#ic-imp"/></svg></span>Improvements</div>
         <div class="card-summary">
-          <span class="v-success">$24,318 captured</span> this week ·
+          <span class="v-success">1.4 d captured</span> this week ·
           <span>12 sent</span> ·
           <span class="v-warning">4 awaiting response</span>
         </div>
@@ -1945,62 +2032,136 @@
 
 // Rigs sorted worst → best (ranking). `section` = the hole section
 // this rig is currently drilling, used by the section filter.
+// `program` = country/region, used by the page-level Program filter.
 const RIGS = [
-  { name: 'Apex 47',      pct: 47, dir: 'down', status: 'red',    chip: 'Act now',  delta: -31, prev: 78, section: '8.5V' },
-  { name: 'Vanguard 128', pct: 55, dir: 'down', status: 'red',    chip: 'Act now',  delta: -26, prev: 81, section: '8.5L' },
-  { name: 'Trident 219',  pct: 61, dir: 'down', status: 'red',    chip: 'Act now',  delta: -1,  prev: 62, section: '8.5V' },
-  { name: 'Helix 478',    pct: 74, dir: 'down', status: 'yellow', chip: 'Watch',    delta: -2,  prev: 76, section: '8.5L' },
-  { name: 'Polaris 312',  pct: 88, dir: 'up',   status: 'green',  chip: 'On track', delta: +3,  prev: 85, section: '24"' },
-  { name: 'Saber 145',    pct: 89, dir: 'down', status: 'green',  chip: 'On track', delta: -1,  prev: 90, section: '12"' },
-  { name: 'Sentinel 587', pct: 90, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 89, section: '12"' },
-  { name: 'Meridian 256', pct: 93, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 91, section: '16"' },
-  { name: 'Anvil 723',    pct: 95, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 94, section: '16"' },
-  { name: 'Bedrock 891',  pct: 97, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 95, section: '22"' },
+  { name: 'Apex 47',      pct: 47, dir: 'down', status: 'red',    chip: 'Act now',  delta: -31, prev: 78, section: '8.5V', program: 'Alaska' },
+  { name: 'Vanguard 128', pct: 55, dir: 'down', status: 'red',    chip: 'Act now',  delta: -26, prev: 81, section: '8.5L', program: 'Canada' },
+  { name: 'Trident 219',  pct: 61, dir: 'down', status: 'red',    chip: 'Act now',  delta: -1,  prev: 62, section: '8.5V', program: 'Alaska' },
+  { name: 'Helix 478',    pct: 74, dir: 'down', status: 'yellow', chip: 'Watch',    delta: -2,  prev: 76, section: '8.5L', program: 'Canada' },
+  { name: 'Polaris 312',  pct: 88, dir: 'up',   status: 'green',  chip: 'On track', delta: +3,  prev: 85, section: '24"',  program: 'Alaska' },
+  { name: 'Saber 145',    pct: 89, dir: 'down', status: 'green',  chip: 'On track', delta: -1,  prev: 90, section: '12"',  program: 'Canada' },
+  { name: 'Sentinel 587', pct: 90, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 89, section: '12"',  program: 'Canada' },
+  { name: 'Meridian 256', pct: 93, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 91, section: '16"',  program: 'Norway' },
+  { name: 'Anvil 723',    pct: 95, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 94, section: '16"',  program: 'Norway' },
+  { name: 'Bedrock 891',  pct: 97, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 95, section: '22"',  program: 'Norway' },
 ];
 
-// Performance gaps heatmap data
+// Top-level page filter state (Program / Time Range / KPI list).
+const pageState = {
+  lifeCycle: 'Drilling',
+  program: 'All',                 // All | Alaska | Canada | Norway
+  timeRange: 'Last week',         // Last week | Last 30 days | Last 6 months
+  selectedKpis: new Set(['ROP', 'Connection', 'Tripping', 'Directional', 'NPT']),
+};
+function timeMul() {
+  return pageState.timeRange === 'Last week'      ? 0.25
+       : pageState.timeRange === 'Last 6 months'  ? 6
+       :                                            1;
+}
+function isRigInProgram(rig) {
+  return pageState.program === 'All' || rig.program === pageState.program;
+}
+
+/* Per-program snapshot data — drives Fleet Score, section pills, and
+   Time Captured baseline so the page visibly changes when the user
+   switches the Program filter. Values are illustrative, not exact. */
+const PROGRAM_DATA = {
+  'All': {
+    fleetScore: 79,
+    delta: +4,
+    activeWells: 22,
+    sectionScores: { '8.5L': 41, '8.5V': 62, '24"': 76, '12"': 81, '16"': 82, '22"': 91 },
+    daysSavedBase: 0.1,    // baseline at Last week
+    daysTotalBase: 1.9,
+    opportunity: [
+      { name: '8.5V',     v: 2.4, status: 'red',    barPct: 96 },
+      { name: '8.5L',     v: 1.1, status: 'yellow', barPct: 46 },
+      { name: '24"',      v: 0.6, status: 'yellow', barPct: 27 },
+      { name: '12"',      v: 0.5, status: 'green',  barPct: 22 },
+      { name: '16" Int.', v: 0.1, status: 'green',  barPct: 5  },
+    ],
+  },
+  'Alaska': {
+    fleetScore: 51,
+    delta: -2,
+    activeWells: 7,
+    sectionScores: { '8.5L': null, '8.5V': 54, '24"': 88, '12"': null, '16"': null, '22"': null },
+    daysSavedBase: 0.02,
+    daysTotalBase: 0.8,
+    opportunity: [
+      { name: '8.5V', v: 1.4, status: 'red',    barPct: 95 },
+      { name: '24"',  v: 0.2, status: 'yellow', barPct: 18 },
+    ],
+  },
+  'Canada': {
+    fleetScore: 75,
+    delta: +3,
+    activeWells: 9,
+    sectionScores: { '8.5L': 64, '8.5V': null, '24"': null, '12"': 88, '16"': 74, '22"': null },
+    daysSavedBase: 0.05,
+    daysTotalBase: 0.8,
+    opportunity: [
+      { name: '8.5L', v: 0.8, status: 'yellow', barPct: 70 },
+      { name: '16"',  v: 0.2, status: 'yellow', barPct: 18 },
+    ],
+  },
+  'Norway': {
+    fleetScore: 95,
+    delta: +1,
+    activeWells: 6,
+    sectionScores: { '8.5L': null, '8.5V': null, '24"': null, '12"': null, '16"': 94, '22"': 96 },
+    daysSavedBase: 0.04,
+    daysTotalBase: 0.2,
+    opportunity: [
+      { name: '16"', v: 0.1, status: 'green', barPct: 50 },
+    ],
+  },
+};
+function statusForScore(v) { return v === null ? 'muted' : v < 70 ? 'red' : v < 85 ? 'yellow' : 'green'; }
+
+// Performance gaps heatmap data — values are DAYS LOST per well.
 // columns: 8.5L, 8.5V, 24", 12", 16", 22"
 // rows:    ROP, Connection, Tripping, Directional, NPT
 const GAP_ROWS = [
   { kpi: 'ROP',         cells: [
-    { v: 42403, s: 'red'    },
-    { v: 0,     s: 'green'  },
-    { v: 15000, s: 'yellow' },
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
+    { v: 2.4, s: 'red'    },
+    { v: 0,   s: 'green'  },
+    { v: 0.8, s: 'yellow' },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
   ]},
   { kpi: 'Connection',  cells: [
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
-    { v: 42403, s: 'red'    },
-    { v: 17932, s: 'yellow' },
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 2.4, s: 'red'    },
+    { v: 1.0, s: 'yellow' },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
   ]},
   { kpi: 'Tripping',    cells: [
-    { v: 42403, s: 'red'    },
-    { v: 0,     s: 'green'  },
-    { v: 9000,  s: 'yellow' },
-    { v: 0,     s: 'green'  },
-    { v: 42403, s: 'red'    },
-    { v: 21498, s: 'yellow' },
+    { v: 2.4, s: 'red'    },
+    { v: 0,   s: 'green'  },
+    { v: 0.5, s: 'yellow' },
+    { v: 0,   s: 'green'  },
+    { v: 2.4, s: 'red'    },
+    { v: 1.2, s: 'yellow' },
   ]},
   { kpi: 'Directional', cells: [
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
-    { v: 14000, s: 'yellow' },
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 0.8, s: 'yellow' },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
   ]},
   { kpi: 'NPT',         cells: [
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
-    { v: 0,     s: 'green'  },
-    { v: 42403, s: 'red'    },
-    { v: 11000, s: 'yellow' },
-    { v: 12394, s: 'yellow' },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 0,   s: 'green'  },
+    { v: 2.4, s: 'red'    },
+    { v: 0.6, s: 'yellow' },
+    { v: 0.7, s: 'yellow' },
   ]},
 ];
 const SECTIONS = ['8.5L','8.5V','24"','12"','16"','22"'];
@@ -2047,18 +2208,17 @@ const STATUSES = {
   dismissed:  { label: 'Dismissed',   chip: 'muted'  },
 };
 
-// Mock improvements feed. `type` decides whether we show "captured" or
-// "potential" framing on the row. `kpiStatus` colors the left bar
-// (severity of the underlying problem).
+// Mock improvements feed. Each row has actual/goal KPI values (for the
+// new card layout) and a `days` field replacing the old dollar `amount`.
 const IMPROVEMENTS = [
-  { id: 0, kpi: 'On Bottom ROP',       rig: 'Apex 47',    rigIdx: 0, section: '8.5L', amount: 8402, type: 'captured',  status: 'captured',  date: 'Mar 28', kpiStatus: 'red'    },
-  { id: 1, kpi: 'Weight to Weight',    rig: 'Vanguard 128',  rigIdx: 1, section: '8.5V', amount: 6200, type: 'potential', status: 'inprogress',date: 'Mar 30', kpiStatus: 'red'    },
-  { id: 2, kpi: 'Slips to Bottom',     rig: 'Trident 219',  rigIdx: 2, section: '16"',  amount: 3800, type: 'potential', status: 'viewed',    date: 'Apr 1',  kpiStatus: 'red'    },
-  { id: 3, kpi: 'Connection time',     rig: 'Polaris 312',  rigIdx: 4, section: '24"',  amount: 5108, type: 'captured',  status: 'captured',  date: 'Mar 27', kpiStatus: 'yellow' },
-  { id: 4, kpi: 'Cased Hole Tripping', rig: 'Helix 478',  rigIdx: 3, section: '16"',  amount: 2400, type: 'potential', status: 'sent',      date: 'Apr 2',  kpiStatus: 'yellow' },
-  { id: 5, kpi: 'Tripping speed',      rig: 'Bedrock 891', rigIdx: 9, section: '22"',  amount: 4808, type: 'captured',  status: 'captured',  date: 'Mar 26', kpiStatus: 'yellow' },
-  { id: 6, kpi: 'Connection time',     rig: 'Trident 219',  rigIdx: 2, section: '12"',  amount: 3100, type: 'potential', status: 'inprogress',date: 'Mar 31', kpiStatus: 'yellow' },
-  { id: 7, kpi: 'ROP',                 rig: 'Saber 145',   rigIdx: 5, section: '16"',  amount: 1200, type: 'potential', status: 'dismissed', date: 'Mar 29', kpiStatus: 'yellow' },
+  { id: 0, kpi: 'On Bottom ROP',       rig: 'Apex 47',      rigIdx: 0, section: '8.5L', actual: 10.86, goal: 22,   unit: 'm/hr', days: 0.5, type: 'captured',  status: 'captured',  date: 'Mar 28', kpiStatus: 'red'    },
+  { id: 1, kpi: 'Weight to Weight',    rig: 'Vanguard 128', rigIdx: 1, section: '8.5V', actual: 19,    goal: 12,   unit: 'min',  days: 0.4, type: 'potential', status: 'inprogress',date: 'Mar 30', kpiStatus: 'red'    },
+  { id: 2, kpi: 'Slips to Bottom',     rig: 'Trident 219',  rigIdx: 2, section: '16"',  actual: 14,    goal: 12,   unit: 'min',  days: 0.2, type: 'potential', status: 'viewed',    date: 'Apr 1',  kpiStatus: 'red'    },
+  { id: 3, kpi: 'Connection time',     rig: 'Polaris 312',  rigIdx: 4, section: '24"',  actual: 3.4,   goal: 2.8,  unit: 'min',  days: 0.3, type: 'captured',  status: 'captured',  date: 'Mar 27', kpiStatus: 'yellow' },
+  { id: 4, kpi: 'Cased Hole Tripping', rig: 'Helix 478',    rigIdx: 3, section: '16"',  actual: 14,    goal: 12,   unit: 'min',  days: 0.1, type: 'potential', status: 'sent',      date: 'Apr 2',  kpiStatus: 'yellow' },
+  { id: 5, kpi: 'Tripping speed',      rig: 'Bedrock 891',  rigIdx: 9, section: '22"',  actual: 11.5,  goal: 10,   unit: 'min',  days: 0.3, type: 'captured',  status: 'captured',  date: 'Mar 26', kpiStatus: 'yellow' },
+  { id: 6, kpi: 'Connection time',     rig: 'Trident 219',  rigIdx: 2, section: '12"',  actual: 3.1,   goal: 2.8,  unit: 'min',  days: 0.2, type: 'potential', status: 'inprogress',date: 'Mar 31', kpiStatus: 'yellow' },
+  { id: 7, kpi: 'ROP',                 rig: 'Saber 145',    rigIdx: 5, section: '16"',  actual: 17,    goal: 20,   unit: 'm/hr', days: 0.1, type: 'potential', status: 'dismissed', date: 'Mar 29', kpiStatus: 'yellow' },
 ];
 
 /* ========================================================================
@@ -2078,11 +2238,12 @@ let rankSection = 'all';
 let rankSort    = 'worst';   // worst | best | az | za
 
 function renderRanking() {
-  // 1) Filter by section
+  // 1) Filter by section AND by the page-level Program filter
   let rigs = RIGS.slice();
   if (rankSection !== 'all') {
     rigs = rigs.filter(r => r.section === rankSection);
   }
+  rigs = rigs.filter(isRigInProgram);
   // 2) Sort
   if (rankSort === 'best')      rigs.sort((a, b) => b.pct - a.pct);
   else if (rankSort === 'az')   rigs.sort((a, b) => a.name.localeCompare(b.name));
@@ -2168,6 +2329,180 @@ document.getElementById('rankCompareBtn').addEventListener('click', (e) => {
   openPanel('compare');
 });
 
+/* ===================================================================
+   PAGE-LEVEL FILTERS — wire menus + propagate changes to widgets
+   =================================================================== */
+/* Render the 6 Performance-by-section pills based on current program */
+function renderSectionPills() {
+  const data = PROGRAM_DATA[pageState.program];
+  const host = document.getElementById('fsSections');
+  if (!host) return;
+  const order = ['8.5L','8.5V','24"','12"','16"','22"'];
+  host.innerHTML = order.map(sec => {
+    const v = data.sectionScores[sec];
+    const st = statusForScore(v);
+    const valTxt = v == null ? '—' : v + '%';
+    return `<button class="fs-section s-${st}" data-panel="section" data-arg='${attr(sec)}' data-tip-type="fleet-section" data-tip-arg="${attr(sec + '|' + (v == null ? 0 : v))}"><div class="name">${sec}</div><div class="val">${valTxt}</div></button>`;
+  }).join('');
+}
+
+/* Render the Opportunity-by-section bars based on current program */
+function renderOpportunity() {
+  const data = PROGRAM_DATA[pageState.program];
+  const host = document.getElementById('oppList');
+  if (!host) return;
+  if (data.opportunity.length === 0) {
+    host.innerHTML = `<div style="color: var(--text-muted); font-size:13px; padding:8px 0;">No open opportunities</div>`;
+    return;
+  }
+  host.innerHTML = data.opportunity.map(row => {
+    return `<button class="opp-row s-${row.status}" data-panel="section" data-arg='${attr(row.name)}' data-tip-type="opp-section" data-tip-arg="${attr(row.name + '|' + row.v + '|' + row.status)}"><div class="opp-name">${row.name}</div><div class="opp-bar"><div style="width:${row.barPct}%"></div></div><div class="opp-val">${row.v.toFixed(1)} d</div></button>`;
+  }).join('');
+}
+
+function applyPageFilters() {
+  // Snapshot for the current program (drives the headline numbers)
+  const prog = PROGRAM_DATA[pageState.program];
+
+  // ---- Lists ----
+  renderRanking();
+  renderImprovements();
+  renderGaps();
+  renderSectionPills();
+  renderOpportunity();
+
+  // Top Actions cards are static — show/hide rows by data-program
+  document.querySelectorAll('.action-card[data-program]').forEach(el => {
+    const ok = pageState.program === 'All' || el.dataset.program === pageState.program;
+    el.style.display = ok ? '' : 'none';
+  });
+
+  // ---- Fleet Score hero ----
+  const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  const setW    = (id, w)   => { const el = document.getElementById(id); if (el) el.style.width = w + '%'; };
+  const setColor= (id, c)   => { const el = document.getElementById(id); if (el) el.style.color = c; };
+
+  setText('fsScoreNum',   prog.fleetScore);
+  setText('fsDelta',      (prog.delta > 0 ? '+' : '') + prog.delta + ' pts');
+  setColor('fsDelta',     prog.delta >= 0 ? 'var(--success)' : 'var(--error)');
+  setText('fsSub',        `vs ${prog.fleetScore - prog.delta}% last month`);
+  setText('fsActiveWells',prog.activeWells);
+
+  // ---- Time Captured + News Days Saved (program × time-range) ----
+  // baseline per program is at "Last week"; scale by timeMul()/0.25
+  const scale  = timeMul() / 0.25;
+  const saved  = prog.daysSavedBase * scale;
+  const total  = prog.daysTotalBase * scale;
+  const potential = total - saved;
+  const savedPct  = total > 0 ? Math.round(saved / total * 100) : 0;
+  const potPct    = 100 - savedPct;
+  setText('tcSavedVal',   saved.toFixed(2).replace(/\.?0+$/, '') + ' d');
+  setText('tcPotVal',     potential.toFixed(1) + ' d');
+  setW('tcSavedBar',      savedPct);
+  setW('tcPotBar',        potPct);
+  setText('tcSavedMeta',  savedPct + '% captured');
+  setText('tcPotMeta',    potPct + '% untapped');
+  setText('tcTotalText',  'of ' + total.toFixed(1) + ' d possible');
+  setText('tcTotalText2', 'of ' + total.toFixed(1) + ' d possible');
+
+  // News chip: Days Saved value + sub-text
+  setText('newsDaysSaved', saved.toFixed(2).replace(/\.?0+$/, '') + ' d');
+  setText('newsDaysSavedSub',
+    pageState.timeRange === 'Last week'      ? 'vs prior week'
+  : pageState.timeRange === 'Last 6 months'  ? 'vs prior period'
+  :                                            'vs prior period'
+  );
+}
+
+/* Generic menu helper for the top-bar filters (single-select) */
+function wirePageMenu(triggerId, menuId, itemAttr, onSelect) {
+  const trigger = document.getElementById(triggerId);
+  const menu    = document.getElementById(menuId);
+  if (!trigger || !menu) return;
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.menu').forEach(m => { if (m !== menu) m.hidden = true; });
+    menu.hidden = !menu.hidden;
+  });
+  menu.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menu.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      onSelect(item.dataset[itemAttr], item.textContent.trim());
+      menu.hidden = true;
+    });
+  });
+}
+
+wirePageMenu('fLifeBtn',  'fLifeMenu',  'life', (val, label) => {
+  pageState.lifeCycle = val;
+  document.getElementById('fLifeLabel').textContent = label;
+  // (Drilling / Completion has no page-content effect in this prototype.)
+});
+wirePageMenu('fProgBtn',  'fProgMenu',  'program', (val, label) => {
+  pageState.program = val;
+  document.getElementById('fProgLabel').textContent = label;
+  applyPageFilters();
+});
+wirePageMenu('fTimeBtn',  'fTimeMenu',  'time', (val, label) => {
+  pageState.timeRange = val;
+  document.getElementById('fTimeLabel').textContent = label;
+  applyPageFilters();
+});
+
+/* KPIs filter — multi-select. Custom handler because we want the menu
+   to stay open while the user picks several KPIs. */
+(function () {
+  const trigger = document.getElementById('fKpisBtn');
+  const menu    = document.getElementById('fKpisMenu');
+  const label   = document.getElementById('fKpisLabel');
+  if (!trigger || !menu) return;
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.menu').forEach(m => { if (m !== menu) m.hidden = true; });
+    menu.hidden = !menu.hidden;
+  });
+  function updateLabel() {
+    const n = pageState.selectedKpis.size;
+    label.textContent = n === 5 ? 'All KPIs' : n === 0 ? 'None' : `${n} selected`;
+    // Update "Deselect/Select all" toggle button text
+    const allBtn = menu.querySelector('[data-page-kpis-all]');
+    if (allBtn) allBtn.textContent = n === 5 ? 'Deselect all' : 'Select all';
+  }
+  menu.querySelectorAll('[data-page-kpi]').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const kpi = item.dataset.pageKpi;
+      if (pageState.selectedKpis.has(kpi)) {
+        pageState.selectedKpis.delete(kpi);
+        item.classList.remove('selected');
+      } else {
+        pageState.selectedKpis.add(kpi);
+        item.classList.add('selected');
+      }
+      updateLabel();
+      applyPageFilters();
+    });
+  });
+  menu.querySelector('[data-page-kpis-all]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (pageState.selectedKpis.size === 5) {
+      pageState.selectedKpis.clear();
+      menu.querySelectorAll('[data-page-kpi]').forEach(i => i.classList.remove('selected'));
+    } else {
+      ['ROP','Connection','Tripping','Directional','NPT'].forEach(k => pageState.selectedKpis.add(k));
+      menu.querySelectorAll('[data-page-kpi]').forEach(i => i.classList.add('selected'));
+    }
+    updateLabel();
+    applyPageFilters();
+  });
+  updateLabel();
+})();
+
+// Apply initial state (Last week is the default)
+applyPageFilters();
+
 function fmtMoney(n) {
   if (n === 0) return '';
   if (n >= 1000) return '$' + Math.round(n/100)/10 + 'k'.replace('.0k','k');
@@ -2186,41 +2521,24 @@ function moneyFull(n) {
   return '$' + n.toLocaleString('en-US');
 }
 
-/* Time & Cost card variant toggle.
-   Persists across page reloads via localStorage. */
-(function () {
-  const card = document.querySelector('.tc-card');
-  if (!card) return;
-  const toggle = document.getElementById('tcToggle');
-  const viewA = card.querySelector('.tc-view-a');
-  const viewB = card.querySelector('.tc-view-b');
-  function apply(v) {
-    card.dataset.tcVariant = v;
-    viewA.hidden = (v !== 'A');
-    viewB.hidden = (v !== 'B');
-    try { localStorage.setItem('tc-variant', v); } catch (e) {}
-  }
-  // Restore last choice
-  let saved = null;
-  try { saved = localStorage.getItem('tc-variant'); } catch (e) {}
-  apply(saved === 'B' ? 'B' : 'A');
-  toggle.addEventListener('click', (e) => {
-    e.stopPropagation();  // don't let the body-level panel handler pick this up
-    apply(card.dataset.tcVariant === 'A' ? 'B' : 'A');
-  });
-})();
 
 function renderImprovements() {
   const list = document.getElementById('impList');
   if (!list) return;
-  list.innerHTML = IMPROVEMENTS.map(imp => {
-    const sclass = 's-' + imp.kpiStatus;
-    const status = STATUSES[imp.status];
+  // Filter by the page-level Program filter (each improvement is linked
+  // to a rig via rigIdx → RIGS[rigIdx].program).
+  const filtered = IMPROVEMENTS.filter(imp => {
+    const r = RIGS[imp.rigIdx];
+    return r && isRigInProgram(r);
+  });
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; padding: 24px 8px; text-align: center;">No improvements for the current filters</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(imp => {
+    const sclass    = 's-' + imp.kpiStatus;
+    const status    = STATUSES[imp.status];
     const isCaptured = imp.type === 'captured';
-    const amtColor = isCaptured
-      ? 'var(--success)'
-      : (imp.kpiStatus === 'red' ? 'var(--error)' : 'var(--warning)');
-    const amtLabel = isCaptured ? 'captured: ' : 'potential: ';
     return `
       <button class="action-card ${sclass}" data-panel="improvement" data-arg="${imp.id}" data-tip-type="improvement">
         <span class="severity">
@@ -2230,9 +2548,9 @@ function renderImprovements() {
           <span class="ac-name">${imp.kpi}</span>
           <span class="ac-sub" style="display:block">${imp.rig} / ${imp.section}</span>
         </span>
-        <span class="ac-potential">${amtLabel}<span class="amt" style="color:${amtColor}">$${imp.amount.toLocaleString()}</span></span>
+        <span class="ac-kpi">${imp.actual} <span class="ac-vs">vs</span> ${imp.goal} <span class="ac-unit">${imp.unit}</span></span>
+        <span class="ac-time">${imp.days} d</span>
         <span class="chip ${status.chip}">${status.label}</span>
-        <span class="ac-improve"><svg class="svg-ico-20"><use href="#ic-arrow-right"/></svg></span>
       </button>
     `;
   }).join('');
@@ -2250,15 +2568,19 @@ function renderGaps() {
     <div class="col-head">16"</div>
     <div class="col-head">22"</div>
   `;
-  GAP_ROWS.forEach(row => {
-    html += `<div class="row-head">${row.kpi}</div>`;
-    row.cells.forEach((c, idx) => {
-      const cls = c.v === 0 ? 'empty' : `s-${c.s}`;
-      const label = c.v === 0 ? '' : '$' + c.v.toLocaleString('en-US');
-      const tipArg = attr(row.kpi + '|' + SECTIONS[idx] + '|' + c.v + '|' + c.s);
-      html += `<button class="gap-cell ${cls}" data-panel="gap" data-arg="${tipArg}" data-tip-type="gap-cell" data-tip-arg="${tipArg}">${label}</button>`;
+  // Only render rows whose KPI is in the page-level KPI filter
+  GAP_ROWS
+    .filter(row => pageState.selectedKpis.has(row.kpi))
+    .forEach(row => {
+      html += `<div class="row-head">${row.kpi}</div>`;
+      row.cells.forEach((c, idx) => {
+        const cls = c.v === 0 ? 'empty' : `s-${c.s}`;
+        // Cell label now in DAYS LOST per well (e.g. "2.4 d")
+        const label = c.v === 0 ? '' : c.v.toFixed(1) + ' d';
+        const tipArg = attr(row.kpi + '|' + SECTIONS[idx] + '|' + c.v + '|' + c.s);
+        html += `<button class="gap-cell ${cls}" data-panel="gap" data-arg="${tipArg}" data-tip-type="gap-cell" data-tip-arg="${tipArg}">${label}</button>`;
+      });
     });
-  });
   grid.innerHTML = html;
 }
 renderGaps();
@@ -2671,7 +2993,7 @@ const PANELS = {
         ])}
         <div class="kpi-hero s-red">
           <div class="kpi-hero-row">
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Gap</div><div class="kpi-hero-val red">$42k</div><div class="kpi-hero-unit">vs $0 target</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days lost</div><div class="kpi-hero-val red">2.4 d</div><div class="kpi-hero-unit">across the fleet</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Avg actual</div><div class="kpi-hero-val">12.4</div><div class="kpi-hero-unit">m/hr</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Goal</div><div class="kpi-hero-val green">22</div><div class="kpi-hero-unit">m/hr</div></div>
           </div>
@@ -2699,7 +3021,7 @@ const PANELS = {
         ])}
         <div class="kpi-hero">
           <div class="kpi-hero-row">
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Days saved</div><div class="kpi-hero-val green">0.3 d</div><div class="kpi-hero-unit">≈ $17,837</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days saved</div><div class="kpi-hero-val green">0.3 d</div><div class="kpi-hero-unit">this period</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Goal (30-day)</div><div class="kpi-hero-val">7.4 d</div><div class="kpi-hero-unit">4% complete</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">vs last month</div><div class="kpi-hero-val green">+0.2 d</div><div class="kpi-hero-unit">200% MoM</div></div>
           </div>
@@ -2780,12 +3102,12 @@ const PANELS = {
      SECTION PANEL — opened from Fleet Score pills or Opportunity bars
      ------------------------------------------------------------------ */
   'section': {
-    label: (arg) => `${arg} section`,
+    label: (arg) => `<span class="cat">Section:</span>${arg}`,
     fn: (arg) => {
       const sectionScores = { '8.5L': 41, '8.5V': 62, '24"': 76, '12"': 81, '16"': 82, '22"': 91, '16" Int.': 82, '16" Surf.': 86 };
-      const sectionDollars = { '8.5L': 19000, '8.5V': 42000, '24"': 11000, '12"': 9000, '16"': 3000, '22"': 0, '16" Int.': 2000, '16" Surf.': 1000 };
+      const sectionDays   = { '8.5L': 1.1, '8.5V': 2.4, '24"': 0.6, '12"': 0.5, '16"': 0.3, '22"': 0,   '16" Int.': 0.1, '16" Surf.': 0.05 };
       const pct = sectionScores[arg] ?? 60;
-      const dollars = sectionDollars[arg] ?? 0;
+      const days = sectionDays[arg] ?? 0;
       const status = pct < 70 ? 'red' : pct < 85 ? 'yellow' : 'green';
       const title = `${arg} section`;
       const body = `
@@ -2795,7 +3117,7 @@ const PANELS = {
         <div class="kpi-hero ${status === 'red' ? 's-red' : ''}">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Section score</div><div class="kpi-hero-val ${status}">${pct}%</div></div>
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Opportunity</div><div class="kpi-hero-val ${status}">${dollars > 0 ? money(dollars) : '—'}</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days on table</div><div class="kpi-hero-val ${status}">${days > 0 ? days.toFixed(1) + ' d' : '—'}</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Rigs in section</div><div class="kpi-hero-val">8</div></div>
           </div>
         </div>
@@ -2819,7 +3141,7 @@ const PANELS = {
      RIG PANEL — opened from any rig click
      ------------------------------------------------------------------ */
   'rig': {
-    label: (arg) => RIGS[parseInt(arg, 10)].name,
+    label: (arg) => `<span class="cat">Rig:</span>${RIGS[parseInt(arg, 10)].name}`,
     fn: (arg) => {
       const idx = parseInt(arg, 10);
       const r = RIGS[idx];
@@ -2839,7 +3161,7 @@ const PANELS = {
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Score</div><div class="kpi-hero-val ${r.status}">${r.pct}%</div><div class="kpi-hero-unit">${r.dir === 'up' ? '+' : ''}${r.delta} pts vs prev · rank ${rankOf} of ${RIGS.length}</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Issues</div><div class="kpi-hero-val">10</div><div class="kpi-hero-unit">across 3 sections</div></div>
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Opportunity</div><div class="kpi-hero-val red">$42k</div><div class="kpi-hero-unit">if all gaps closed</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days lost</div><div class="kpi-hero-val red">2.4 d</div><div class="kpi-hero-unit">if all gaps closed</div></div>
           </div>
 
           <!-- vs Fleet / vs Best comparison strip -->
@@ -2888,7 +3210,7 @@ const PANELS = {
   'kpi': {
     label: (arg) => {
       const [, kpi] = (arg || '').split('|');
-      return kpi || 'KPI';
+      return `<span class="cat">KPI:</span>${kpi || 'KPI'}`;
     },
     fn: (arg) => {
       const [idxStr, kpi, section] = (arg || '|On Bottom ROP|8.5V').split('|');
@@ -2949,7 +3271,8 @@ const PANELS = {
     },
     fn: (arg) => {
       const [kpi, section, vStr, status] = (arg || '').split('|');
-      const v = parseInt(vStr || '0', 10);
+      // v is now days (decimal). 0 means empty/on-track.
+      const v = parseFloat(vStr || '0');
       const isEmpty = v === 0;
       const title = `${section} · ${kpi}`;
       const body = isEmpty ? `
@@ -2975,7 +3298,7 @@ const PANELS = {
         ])}
         <div class="kpi-hero ${status === 'red' ? 's-red' : ''}">
           <div class="kpi-hero-row">
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Loss</div><div class="kpi-hero-val ${status}">${moneyFull(v)}</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days lost</div><div class="kpi-hero-val ${status}">${v.toFixed(1)} d</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Avg actual</div><div class="kpi-hero-val">12.4</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Goal</div><div class="kpi-hero-val green">22</div></div>
           </div>
@@ -3118,10 +3441,23 @@ const PANELS = {
                   const v = (KPI_VALUES[idx] || {})[k.id];
                   if (!v) return `<div class="compare-cell empty"><span class="cell-empty">—</span></div>`;
                   const st = scoreStatus(v.s);
+                  // Deterministic delta vs previous period so the
+                  // comparison feels alive without hand-coding 60 prev
+                  // values. Seed varies per rig × KPI.
+                  const seed   = (idx * 37 + k.id.charCodeAt(0) * 11 + k.id.length * 5) % 100;
+                  const delta  = (seed - 50) / 5;    // -10..+10 pts
+                  const prevS  = Math.max(0, Math.min(100, Math.round(v.s - delta)));
+                  const dPts   = v.s - prevS;
+                  const dir    = dPts > 0 ? 'up' : dPts < 0 ? 'down' : '';
+                  const arrow  = dPts > 0 ? '↑' : dPts < 0 ? '↓' : '';
+                  const tipArg = attr(idx + '|' + k.id + '|' + v.a + '|' + v.s + '|' + prevS + '|' + k.unit);
                   return `
-                    <button class="compare-cell s-${st}" data-panel="kpi" data-arg="${idx}|${attr(k.name)}|${attr(rig.section)}">
-                      <div class="cell-score">${v.s}%</div>
+                    <button class="compare-cell s-${st}" data-panel="kpi" data-arg="${idx}|${attr(k.name)}|${attr(rig.section)}" data-tip-type="compare-cell" data-tip-arg="${tipArg}">
                       <div class="cell-actual">${v.a} <span class="unit">${k.unit}</span></div>
+                      <div class="cell-meta">
+                        <span class="score">${v.s}%</span>
+                        ${dir ? `<span class="delta ${dir}">${arrow} ${Math.abs(dPts)}&nbsp;pts</span>` : ''}
+                      </div>
                       <div class="cell-bar"><div style="width:${Math.min(100, v.s)}%"></div></div>
                     </button>
                   `;
@@ -3140,7 +3476,7 @@ const PANELS = {
   'improvement': {
     label: (arg) => {
       const imp = IMPROVEMENTS[parseInt(arg, 10)];
-      return imp ? imp.kpi : 'Improvement';
+      return imp ? `<span class="cat">KPI:</span>${imp.kpi}` : 'Improvement';
     },
     fn: (arg) => {
       const imp = IMPROVEMENTS[parseInt(arg, 10)];
@@ -3176,18 +3512,18 @@ const PANELS = {
           <div class="kpi-hero-row">
             <div class="kpi-hero-col">
               <div class="kpi-hero-label">${isCaptured ? 'Captured' : 'Potential'}</div>
-              <div class="kpi-hero-val ${isCaptured ? 'green' : (imp.kpiStatus === 'red' ? 'red' : 'yellow')}">$${imp.amount.toLocaleString()}</div>
+              <div class="kpi-hero-val ${isCaptured ? 'green' : (imp.kpiStatus === 'red' ? 'red' : 'yellow')}">${imp.days} d</div>
               <div class="kpi-hero-unit">${imp.section}</div>
             </div>
             <div class="kpi-hero-col">
               <div class="kpi-hero-label">Actual</div>
-              <div class="kpi-hero-val">10.86</div>
-              <div class="kpi-hero-unit">m/hr</div>
+              <div class="kpi-hero-val">${imp.actual}</div>
+              <div class="kpi-hero-unit">${imp.unit}</div>
             </div>
             <div class="kpi-hero-col">
               <div class="kpi-hero-label">Goal</div>
-              <div class="kpi-hero-val green">22</div>
-              <div class="kpi-hero-unit">m/hr</div>
+              <div class="kpi-hero-val green">${imp.goal}</div>
+              <div class="kpi-hero-unit">${imp.unit}</div>
             </div>
           </div>
           ${isClosed
@@ -3207,7 +3543,7 @@ const PANELS = {
 
         <div class="panel-list-head">Message sent to crew</div>
         <div class="trend-block" style="font-size:13px;line-height:20px;color:var(--text-secondary);">
-          "Hey team — if we can hit the ${imp.kpi} target in ${imp.section}, that's roughly $${imp.amount.toLocaleString()} on this well. Let's push for it on the next stand. — Max"
+          "Hey team — if we can hit the ${imp.kpi} target in ${imp.section}, that's roughly ${imp.days} d back on this well. Let's push for it on the next stand. — Max"
         </div>
 
         <div class="panel-list-head">Related KPI</div>
@@ -3237,22 +3573,22 @@ const PANELS = {
     fn: () => PANELS['news-days-saved'].fn()
   },
   'savings-potential': {
-    label: () => 'Savings potential',
+    label: () => 'Days on the table',
     fn: () => {
-      const title = 'Savings potential';
+      const title = 'Days on the table';
       const body = `
         ${chipSet([
-          { cls: 'active acc', label: '$126k', x: true },
+          { cls: 'active acc', label: '7.1 d', x: true },
         ])}
         <div class="kpi-hero">
           <div class="kpi-hero-row">
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Total potential</div><div class="kpi-hero-val accent" style="color:var(--accent)">$126k</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Total potential</div><div class="kpi-hero-val" style="color:var(--warning)">7.1 d</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Open gaps</div><div class="kpi-hero-val">17</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Across rigs</div><div class="kpi-hero-val">9</div></div>
           </div>
         </div>
         <div class="panel-list-head">Biggest opportunities</div>
-        <button class="p-card s-red" data-panel="gap" data-arg="ROP|8.5L|42403|red">
+        <button class="p-card s-red" data-panel="gap" data-arg="ROP|8.5L|2.4|red">
           <div class="p-card-head">
             <div>
               <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>8.5L · ROP</div>
@@ -3261,11 +3597,11 @@ const PANELS = {
             <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
           </div>
           <div class="delta-row">
-            <span class="delta-to red">$42,403</span>
+            <span class="delta-to red">2.4 d</span>
             <span class="delta-chip chip red">Act now</span>
           </div>
         </button>
-        <button class="p-card s-red" data-panel="gap" data-arg="Tripping|8.5L|42403|red">
+        <button class="p-card s-red" data-panel="gap" data-arg="Tripping|8.5L|2.4|red">
           <div class="p-card-head">
             <div>
               <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>8.5L · Tripping</div>
@@ -3274,11 +3610,11 @@ const PANELS = {
             <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
           </div>
           <div class="delta-row">
-            <span class="delta-to red">$42,403</span>
+            <span class="delta-to red">2.4 d</span>
             <span class="delta-chip chip red">Act now</span>
           </div>
         </button>
-        <button class="p-card s-red" data-panel="gap" data-arg="Tripping|16&quot;|42403|red">
+        <button class="p-card s-red" data-panel="gap" data-arg="Tripping|16&quot;|2.4|red">
           <div class="p-card-head">
             <div>
               <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>16" · Tripping</div>
@@ -3287,11 +3623,11 @@ const PANELS = {
             <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
           </div>
           <div class="delta-row">
-            <span class="delta-to red">$42,403</span>
+            <span class="delta-to red">2.4 d</span>
             <span class="delta-chip chip red">Act now</span>
           </div>
         </button>
-        <button class="p-card s-yellow" data-panel="gap" data-arg="Tripping|22&quot;|21498|yellow">
+        <button class="p-card s-yellow" data-panel="gap" data-arg="Tripping|22&quot;|1.2|yellow">
           <div class="p-card-head">
             <div>
               <div class="p-card-name"><svg class="svg-ico" style="color:var(--text-secondary)"><use href="#ic-target"/></svg>22" · Tripping</div>
@@ -3300,7 +3636,7 @@ const PANELS = {
             <span class="chev"><svg class="svg-ico"><use href="#ic-arrow-right"/></svg></span>
           </div>
           <div class="delta-row">
-            <span class="delta-to yellow">$21,498</span>
+            <span class="delta-to yellow">1.2 d</span>
             <span class="delta-chip chip yellow">Watch</span>
           </div>
         </button>
@@ -3397,33 +3733,33 @@ function buildTipHTML(el) {
     case 'days-saved': {
       return `
         <div class="tip-title">Days saved</div>
-        <div class="tip-row"><span class="dot" style="background:var(--success)"></span><span class="label">Captured:</span><span class="value">0.3 d · $17,837</span></div>
-        <div class="tip-row"><span class="label">Of total:</span><span class="value">7.4 d / $144k possible</span></div>
+        <div class="tip-row"><span class="dot" style="background:var(--success)"></span><span class="label">Captured:</span><span class="value">0.3 d</span></div>
+        <div class="tip-row"><span class="label">Of total:</span><span class="value">7.4 d possible</span></div>
         <div class="tip-divider"></div>
         <div class="tip-hint">Click for trend & top contributors</div>`;
     }
     case 'savings-pot': {
       return `
-        <div class="tip-title">Savings potential</div>
-        <div class="tip-row"><span class="dot" style="background:var(--warning)"></span><span class="label">Untapped:</span><span class="value">$126k · 7.1 d</span></div>
+        <div class="tip-title">Days on the table</div>
+        <div class="tip-row"><span class="dot" style="background:var(--warning)"></span><span class="label">Untapped:</span><span class="value">7.1 d</span></div>
         <div class="tip-row"><span class="label">If all current gaps closed</span></div>
         <div class="tip-divider"></div>
         <div class="tip-hint">Click to see biggest opportunities</div>`;
     }
     case 'opp-section': {
-      // arg = "8.5V|42000|red"
+      // arg = "8.5V|2.4|red"
       const [sec, vStr, st] = arg.split('|');
-      const v = parseInt(vStr, 10);
+      const v = parseFloat(vStr);
       return `
         <div class="tip-title">${sec} section</div>
-        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Possible savings:</span><span class="value" style="color:${colorFor(st)}">$${v.toLocaleString()}</span></div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Days on table:</span><span class="value" style="color:${colorFor(st)}">${v.toFixed(1)} d</span></div>
         <div class="tip-divider"></div>
         <div class="tip-hint">Click to see worst rigs in this section</div>`;
     }
     case 'gap-cell': {
-      // arg = "ROP|8.5L|42403|red"
+      // arg = "ROP|8.5L|2.4|red"
       const [kpi, sec, vStr, st] = arg.split('|');
-      const v = parseInt(vStr, 10);
+      const v = parseFloat(vStr);
       if (v === 0) {
         return `
           <div class="tip-title">${sec} · ${kpi}</div>
@@ -3433,13 +3769,34 @@ function buildTipHTML(el) {
       }
       return `
         <div class="tip-title">${sec} · ${kpi}</div>
-        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Loss:</span><span class="value" style="color:${colorFor(st)}">$${v.toLocaleString()}</span></div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Days lost:</span><span class="value" style="color:${colorFor(st)}">${v.toFixed(1)} d</span></div>
         <div class="tip-row"><span class="label">Status:</span><span class="value" style="color:${colorFor(st)}">${statusName(st)}</span></div>
         <div class="tip-divider"></div>
         <div class="tip-hint">Click to see contributing rigs</div>`;
     }
     case 'action': {
       return `<div class="tip-hint">Click to open KPI details and send an improvement</div>`;
+    }
+    case 'compare-cell': {
+      // arg = "rigIdx|kpiId|actual|currScore|prevScore|unit"
+      const [, kpiId, aStr, sStr, pStr, unit] = arg.split('|');
+      const a = aStr, s = parseFloat(sStr), p = parseFloat(pStr);
+      const dPts = s - p;
+      const dir  = dPts > 0 ? 'up' : dPts < 0 ? 'down' : '';
+      const arrow = dPts > 0 ? '▲' : dPts < 0 ? '▼' : '—';
+      const dColor = dPts > 0 ? 'var(--success)' : dPts < 0 ? 'var(--error)' : 'var(--text-muted)';
+      // Generate a synthetic "previous" actual value for the tooltip
+      const aNum   = parseFloat(a);
+      const ratio  = s > 0 ? p / s : 1;
+      const prevA  = (aNum * ratio).toFixed(aNum < 10 ? 2 : 1);
+      const kpiName = (COMPARE_KPIS.find(k => k.id === kpiId) || {}).name || kpiId;
+      return `
+        <div class="tip-title">${kpiName}</div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(scoreStatus(s))}"></span><span class="label">Current:</span><span class="value">${a} ${unit} (${s}%)</span></div>
+        <div class="tip-row"><span class="label">Previous period:</span><span class="value">${prevA} ${unit} (${Math.round(p)}%)</span></div>
+        <div class="tip-row"><span class="label">Change:</span><span class="value" style="color:${dColor}">${arrow} ${Math.abs(dPts)} pts</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click for full trend & comparison</div>`;
     }
     case 'improvement': {
       return `<div class="tip-hint">Click to see status, timeline, and message sent to crew</div>`;
@@ -3456,7 +3813,7 @@ function buildTipHTML(el) {
               <div class="tip-hint">Click to see which rigs and why</div>`;
     case 'news-biggest-gap':
       return `<div class="tip-title">Biggest gap</div>
-              <div class="tip-row"><span class="label">8.5V · ROP:</span><span class="value" style="color:var(--warning)">$42k loss</span></div>
+              <div class="tip-row"><span class="label">8.5V · ROP:</span><span class="value" style="color:var(--warning)">2.4 d lost</span></div>
               <div class="tip-divider"></div>
               <div class="tip-hint">Click to see contributing rigs</div>`;
     case 'news-days-saved':

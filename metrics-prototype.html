@@ -361,6 +361,55 @@
     transition: background 0.15s, color 0.15s;
   }
   .card-action-btn:hover { background: var(--w8); color: var(--text-primary); }
+  /* Small info icon — sits next to a card title to signal "there's an
+     explanation here." Hover triggers the existing tooltip system. */
+  .info-icon {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: help;
+    transition: color 0.15s;
+  }
+  .info-icon:hover { color: var(--text-secondary); }
+  .info-icon svg { width: 16px; height: 16px; }
+
+  /* Template menu items — multi-line, name + grey weights */
+  .menu-item.tpl-item {
+    height: auto;
+    padding: 8px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 280px;
+    white-space: normal;
+  }
+  .menu-item.tpl-item .tpl-name {
+    font-size: 14px; line-height: 20px;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  .menu-item.tpl-item .tpl-weights {
+    font-size: 12px; line-height: 16px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .menu-item.tpl-item.active .tpl-name    { color: var(--accent); }
+  .menu-item.tpl-item.active .tpl-weights { color: var(--accent); opacity: 0.65; }
+  .menu-item.tpl-item:hover { background: var(--w8); }
+  /* "Manage templates →" footer link inside the dropdown */
+  .menu-item.tpl-manage {
+    border-top: 1px solid var(--w8);
+    margin-top: 4px;
+    padding-top: 10px;
+    color: var(--accent);
+    font-weight: 500;
+    height: auto;
+    padding-bottom: 4px;
+  }
 
   /* ----- Menu trigger button (with text + chevron) ------------------ */
   .menu-anchor { position: relative; display: inline-flex; }
@@ -1180,12 +1229,81 @@
   .kpi-hero.s-red::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--error); border-radius: 8px 0 0 8px; }
   .kpi-hero-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: start; }
   .kpi-hero-col { display: flex; flex-direction: column; gap: 2px; }
-  .kpi-hero-label { font-size: 12px; color: var(--text-muted); }
+  .kpi-hero-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .kpi-hero-label .info-icon { width: 14px; height: 14px; }
+  .kpi-hero-label .info-icon svg { width: 12px; height: 12px; }
   .kpi-hero-val   { font-size: 28px; font-weight: 500; color: var(--text-primary); line-height: 32px; }
   .kpi-hero-val.red    { color: var(--error); }
   .kpi-hero-val.yellow { color: var(--warning); }
   .kpi-hero-val.green  { color: var(--success); }
   .kpi-hero-unit  { font-size: 12px; color: var(--text-muted); }
+
+  /* Subtitle under "Money" big number — just "≈ $45k/day". */
+  .rate-line {
+    display: inline-flex; align-items: center;
+    gap: 4px;
+  }
+  /* Edit-rate button — sits BELOW the Money column. 32px from the
+     design system. */
+  .rate-edit-wrap {
+    position: relative;
+    display: inline-block;
+    margin-top: 8px;
+  }
+  .rate-edit-btn {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: var(--w8);
+    border: 0;
+    color: var(--text-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .rate-edit-btn:hover { background: var(--w12); color: var(--text-primary); }
+  .rate-edit-btn svg { width: 16px; height: 16px; }
+  .rate-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background: #1f1f1f;
+    border: 1px solid var(--w12);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 80;
+    display: flex; flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+  /* Without this, the .rate-popover { display: flex } above would
+     override the global [hidden] rule and the popover would always
+     be visible. */
+  .rate-popover[hidden] { display: none; }
+  .rate-popover-title { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+  .rate-popover-input {
+    background: var(--w8);
+    border: 1px solid var(--w12);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .rate-popover-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--w4);
+  }
+  .rate-popover-hint { font-size: 11px; color: var(--text-muted); line-height: 14px; }
 
   .improve-btn {
     margin-top: 16px;
@@ -1225,6 +1343,25 @@
   }
   .compare-btn:hover { background: rgba(3,188,212,0.30); }
   .compare-btn svg { width: 32px; height: 32px; flex-shrink: 0; }
+
+  /* Action row below the rig hero: 2 equal-weight secondary buttons
+     side by side. Digital Twin (left) + Compare (right). */
+  .rig-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  /* In the action row, both buttons drop uppercase + use a 24px icon
+     so the "Digital Twin" label fits the half-width slot. */
+  .rig-actions .compare-btn {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  .rig-actions .compare-btn svg { width: 24px; height: 24px; }
 
   /* Rig comparison strip: a horizontal track with three dots —
      You / Fleet avg / Best rig — positioned by % score. Lives
@@ -1598,6 +1735,17 @@
     font-size: 12px;
     line-height: 16px;
   }
+  /* 2-column key/value list used inside tooltips (e.g., template weights) */
+  .tip-weights {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 16px;
+    row-gap: 3px;
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .tip-weights .pct { text-align: right; }
 
   /* ====================================================================
      PANEL ENTRY ANIMATION FOR INNER CONTENT
@@ -1659,6 +1807,20 @@
     <!-- Compare icon — horizontal bars of varied length -->
     <symbol id="ic-compare" viewBox="0 0 24 24">
       <path d="M4 6h14M4 12h9M4 18h11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <!-- Info icon — circled "i" -->
+    <symbol id="ic-info" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4" fill="none"/>
+      <circle cx="8" cy="4.8" r="0.85" fill="currentColor"/>
+      <path d="M8 7.2v4.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    </symbol>
+    <!-- Edit pencil — small pencil for inline edit -->
+    <symbol id="ic-edit" viewBox="0 0 16 16">
+      <path d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+    </symbol>
+    <!-- Rig icon for the Digital Twin button (user-supplied SVG) -->
+    <symbol id="ic-rig-twin" viewBox="0 0 20 20">
+      <path d="M17.0327 18.3911L14.891 10.4911C14.891 10.4911 14.8744 10.4328 14.866 10.4078L14.1494 7.76615H15.8327C16.1744 7.76615 16.4577 7.48281 16.4577 7.14115C16.4577 6.79948 16.1744 6.51615 15.8327 6.51615H13.816L13.0994 3.86615C12.866 3.24115 12.2577 2.81615 11.5827 2.81615H10.6327V1.25781C10.6327 0.916146 10.3494 0.632812 10.0077 0.632812C9.66602 0.632812 9.38269 0.916146 9.38269 1.25781V2.81615H8.43269C7.75769 2.81615 7.14936 3.24115 6.89936 3.92448L6.19936 6.51615H4.18269C3.84102 6.51615 3.55769 6.79948 3.55769 7.14115C3.55769 7.48281 3.84102 7.76615 4.18269 7.76615H5.85769L5.14102 10.4245C5.14102 10.4245 5.13269 10.4578 5.12436 10.4745L2.98269 18.3911C2.89936 18.7161 3.02436 19.0578 3.30769 19.2411C3.44102 19.3328 3.59102 19.3745 3.74102 19.3745C3.90769 19.3745 4.08269 19.3161 4.22436 19.2078L10.0244 14.7161L15.8244 19.2078C16.091 19.4161 16.4577 19.4245 16.7327 19.2411C17.016 19.0578 17.141 18.7078 17.0577 18.3828L17.0327 18.3911ZM8.07436 4.29948C8.12436 4.15781 8.26602 4.05781 8.42436 4.05781H11.5827C11.7327 4.05781 11.8744 4.15781 11.9077 4.24115L12.5244 6.50781H7.48269L8.08269 4.29948H8.07436ZM4.54102 17.3661L6.08269 11.6745L8.98269 13.9245L4.54102 17.3661ZM6.43269 10.3661L7.14102 7.75781H12.8577L13.566 10.3661L9.99936 13.1328L6.43269 10.3661ZM11.016 13.9245L13.916 11.6745L15.4577 17.3661L11.016 13.9245Z" fill="currentColor"/>
     </symbol>
   </defs>
 </svg>
@@ -1777,7 +1939,7 @@
       <button class="news-chip warn" data-panel="news-biggest-gap" data-tip-type="news-biggest-gap">
         <span class="ico"><svg class="svg-ico-20"><use href="#ic-warning"/></svg></span>
         Biggest gap <strong>8.5V • ROP</strong>
-        <span class="v-warning">2.4 d lost</span>
+        <span class="v-warning">2.4 d at stake</span>
       </button>
       <button class="news-chip good" data-panel="news-days-saved" data-tip-type="news-days-saved">
         <span class="ico"><svg class="svg-ico-20"><use href="#ic-clock"/></svg></span>
@@ -1791,7 +1953,22 @@
 
       <!-- FLEET SCORE CARD -->
       <div class="card fleet-score-card">
-        <div class="card-title"><span class="ico"><svg class="svg-ico-20"><use href="#ic-cup"/></svg></span>Fleet Score</div>
+        <div class="card-title">
+          <span class="ico"><svg class="svg-ico-20"><use href="#ic-cup"/></svg></span>
+          Fleet Score
+          <button class="info-icon" data-tip-type="fleet-score-info" aria-label="About Fleet Score">
+            <svg><use href="#ic-info"/></svg>
+          </button>
+          <span class="spacer"></span>
+          <!-- Template selector — same component as Ranking's section dropdown -->
+          <div class="menu-anchor">
+            <button class="menu-trigger" id="fsTemplateBtn" aria-haspopup="true">
+              <span id="fsTemplateLabel">Balanced</span>
+              <span class="chev"><svg class="svg-ico"><use href="#ic-chev-down"/></svg></span>
+            </button>
+            <div class="menu" id="fsTemplateMenu" hidden></div>
+          </div>
+        </div>
 
         <!-- Hero (full-width clickable area, centered vertically) -->
         <button class="fs-top" data-panel="fleet-score" data-tip-type="fleet-score">
@@ -2034,17 +2211,26 @@
 // this rig is currently drilling, used by the section filter.
 // `program` = country/region, used by the page-level Program filter.
 const RIGS = [
-  { name: 'Apex 47',      pct: 47, dir: 'down', status: 'red',    chip: 'Act now',  delta: -31, prev: 78, section: '8.5V', program: 'Alaska' },
-  { name: 'Vanguard 128', pct: 55, dir: 'down', status: 'red',    chip: 'Act now',  delta: -26, prev: 81, section: '8.5L', program: 'Canada' },
-  { name: 'Trident 219',  pct: 61, dir: 'down', status: 'red',    chip: 'Act now',  delta: -1,  prev: 62, section: '8.5V', program: 'Alaska' },
-  { name: 'Helix 478',    pct: 74, dir: 'down', status: 'yellow', chip: 'Watch',    delta: -2,  prev: 76, section: '8.5L', program: 'Canada' },
-  { name: 'Polaris 312',  pct: 88, dir: 'up',   status: 'green',  chip: 'On track', delta: +3,  prev: 85, section: '24"',  program: 'Alaska' },
-  { name: 'Saber 145',    pct: 89, dir: 'down', status: 'green',  chip: 'On track', delta: -1,  prev: 90, section: '12"',  program: 'Canada' },
-  { name: 'Sentinel 587', pct: 90, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 89, section: '12"',  program: 'Canada' },
-  { name: 'Meridian 256', pct: 93, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 91, section: '16"',  program: 'Norway' },
-  { name: 'Anvil 723',    pct: 95, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 94, section: '16"',  program: 'Norway' },
-  { name: 'Bedrock 891',  pct: 97, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 95, section: '22"',  program: 'Norway' },
+  // daysLost = time impact "if all gaps were closed"; dayRate is per-rig
+  // (configurable from the Rig panel hero in the prototype).
+  { name: 'Apex 47',      pct: 47, dir: 'down', status: 'red',    chip: 'Act now',  delta: -31, prev: 78, section: '8.5V', program: 'Alaska', daysLost: 2.4,  dayRate: 45000 },
+  { name: 'Vanguard 128', pct: 55, dir: 'down', status: 'red',    chip: 'Act now',  delta: -26, prev: 81, section: '8.5L', program: 'Canada', daysLost: 1.8,  dayRate: 45000 },
+  { name: 'Trident 219',  pct: 61, dir: 'down', status: 'red',    chip: 'Act now',  delta: -1,  prev: 62, section: '8.5V', program: 'Alaska', daysLost: 1.6,  dayRate: 45000 },
+  { name: 'Helix 478',    pct: 74, dir: 'down', status: 'yellow', chip: 'Watch',    delta: -2,  prev: 76, section: '8.5L', program: 'Canada', daysLost: 1.1,  dayRate: 45000 },
+  { name: 'Polaris 312',  pct: 88, dir: 'up',   status: 'green',  chip: 'On track', delta: +3,  prev: 85, section: '24"',  program: 'Alaska', daysLost: 0.4,  dayRate: 45000 },
+  { name: 'Saber 145',    pct: 89, dir: 'down', status: 'green',  chip: 'On track', delta: -1,  prev: 90, section: '12"',  program: 'Canada', daysLost: 0.3,  dayRate: 45000 },
+  { name: 'Sentinel 587', pct: 90, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 89, section: '12"',  program: 'Canada', daysLost: 0.3,  dayRate: 45000 },
+  { name: 'Meridian 256', pct: 93, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 91, section: '16"',  program: 'Norway', daysLost: 0.2,  dayRate: 45000 },
+  { name: 'Anvil 723',    pct: 95, dir: 'up',   status: 'green',  chip: 'On track', delta: +1,  prev: 94, section: '16"',  program: 'Norway', daysLost: 0.1,  dayRate: 45000 },
+  { name: 'Bedrock 891',  pct: 97, dir: 'up',   status: 'green',  chip: 'On track', delta: +2,  prev: 95, section: '22"',  program: 'Norway', daysLost: 0.05, dayRate: 45000 },
 ];
+
+// Compact money formatter ($X.XM / $XXk / $X)
+function fmtMoney(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000)    return '$' + Math.round(n / 1000) + 'k';
+  return '$' + Math.round(n);
+}
 
 // Top-level page filter state (Program / Time Range / KPI list).
 const pageState = {
@@ -2052,6 +2238,14 @@ const pageState = {
   program: 'All',                 // All | Alaska | Canada | Norway
   timeRange: 'Last week',         // Last week | Last 30 days | Last 6 months
   selectedKpis: new Set(['ROP', 'Connection', 'Tripping', 'Directional', 'NPT']),
+  // Scoring template — drives the Fleet Score calculation. Defaults to
+  // Balanced but persisted via localStorage so a user's preferred
+  // template carries across sessions (and would sync with Scoreboard
+  // in the real product).
+  template: (function () {
+    try { return localStorage.getItem('fs-template') || 'balanced'; }
+    catch (e) { return 'balanced'; }
+  })(),
 };
 function timeMul() {
   return pageState.timeRange === 'Last week'      ? 0.25
@@ -2118,6 +2312,35 @@ const PROGRAM_DATA = {
   },
 };
 function statusForScore(v) { return v === null ? 'muted' : v < 70 ? 'red' : v < 85 ? 'yellow' : 'green'; }
+
+/* Scoring templates — same set as the Scoreboard tab.
+   Each shifts the displayed Fleet Score by `scoreOffset` so the user
+   can see the template selection actually do something. */
+const TEMPLATES = [
+  { id: 'balanced',    name: 'Balanced',
+    weights: '20% Drill · 18% Dir · 12% Conn · 12% Trip · 23% NPT · 15% Flat',
+    weightsFull: [['Drilling',20],['Directional',18],['Connection',12],['Tripping',12],['NPT',23],['Flat time',15]],
+    scoreOffset:  0 },
+  { id: 'drilling',    name: 'Drilling Efficiency',
+    weights: '30% Drill · 13% Dir · 10% Conn · 10% Trip · 22% NPT · 15% Flat',
+    weightsFull: [['Drilling',30],['Directional',13],['Connection',10],['Tripping',10],['NPT',22],['Flat time',15]],
+    scoreOffset: -3 },
+  { id: 'npt',         name: 'NPT Critical',
+    weights: '13% Drill · 13% Dir · 13% Conn · 13% Trip · 35% NPT · 13% Flat',
+    weightsFull: [['Drilling',13],['Directional',13],['Connection',13],['Tripping',13],['NPT',35],['Flat time',13]],
+    scoreOffset: -6 },
+  { id: 'directional', name: 'Directional Focus',
+    weights: '17% Drill · 30% Dir · 13% Conn · 9% Trip · 18% NPT · 13% Flat',
+    weightsFull: [['Drilling',17],['Directional',30],['Connection',13],['Tripping',9],['NPT',18],['Flat time',13]],
+    scoreOffset: +4 },
+  { id: 'rig',         name: 'Rig Efficiency',
+    weights: '17% Drill · 13% Dir · 22% Conn · 17% Trip · 17% NPT · 14% Flat',
+    weightsFull: [['Drilling',17],['Directional',13],['Connection',22],['Tripping',17],['NPT',17],['Flat time',14]],
+    scoreOffset: -4 },
+];
+function currentTemplate() {
+  return TEMPLATES.find(t => t.id === pageState.template) || TEMPLATES[0];
+}
 
 // Performance gaps heatmap data — values are DAYS LOST per well.
 // columns: 8.5L, 8.5V, 24", 12", 16", 22"
@@ -2303,11 +2526,15 @@ function setupMenu(triggerId, menuId, onSelect) {
     });
   });
 }
-// Outside click closes all menus
+// Outside click closes all menus (including the per-rig rate popover)
 document.addEventListener('click', (e) => {
   document.querySelectorAll('.menu').forEach(m => {
     if (!m.hidden && !m.contains(e.target)) m.hidden = true;
   });
+  const ratePop = document.getElementById('ratePopover');
+  if (ratePop && !ratePop.hidden && !ratePop.contains(e.target) && !e.target.closest('#rigRateEditBtn')) {
+    ratePop.hidden = true;
+  }
 });
 
 setupMenu('rankSectionBtn', 'rankSectionMenu', (item) => {
@@ -2382,10 +2609,13 @@ function applyPageFilters() {
   const setW    = (id, w)   => { const el = document.getElementById(id); if (el) el.style.width = w + '%'; };
   const setColor= (id, c)   => { const el = document.getElementById(id); if (el) el.style.color = c; };
 
-  setText('fsScoreNum',   prog.fleetScore);
+  // Apply the template's score offset on top of the program baseline.
+  const tpl = currentTemplate();
+  const score = Math.max(0, Math.min(100, prog.fleetScore + tpl.scoreOffset));
+  setText('fsScoreNum',   score);
   setText('fsDelta',      (prog.delta > 0 ? '+' : '') + prog.delta + ' pts');
   setColor('fsDelta',     prog.delta >= 0 ? 'var(--success)' : 'var(--error)');
-  setText('fsSub',        `vs ${prog.fleetScore - prog.delta}% last month`);
+  setText('fsSub',        `vs ${score - prog.delta}% last month`);
   setText('fsActiveWells',prog.activeWells);
 
   // ---- Time Captured + News Days Saved (program × time-range) ----
@@ -2498,6 +2728,57 @@ wirePageMenu('fTimeBtn',  'fTimeMenu',  'time', (val, label) => {
     applyPageFilters();
   });
   updateLabel();
+})();
+
+/* Fleet Score template selector — same look as Ranking's section
+   dropdown. Renders the menu from TEMPLATES and updates the visible
+   score when the user picks one. */
+(function () {
+  const trigger = document.getElementById('fsTemplateBtn');
+  const menu    = document.getElementById('fsTemplateMenu');
+  const label   = document.getElementById('fsTemplateLabel');
+  if (!trigger || !menu) return;
+
+  function renderTemplateMenu() {
+    menu.innerHTML = TEMPLATES.map(t => `
+      <button class="menu-item tpl-item ${t.id === pageState.template ? 'active' : ''}" data-template="${t.id}">
+        <div class="tpl-name">${t.name}</div>
+        <div class="tpl-weights">${t.weights}</div>
+      </button>
+    `).join('') + `
+      <button class="menu-item tpl-item tpl-manage" data-tpl-manage="1">
+        Manage templates →
+      </button>
+    `;
+    // Attach item handlers (re-attached every render)
+    menu.querySelectorAll('[data-template]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pageState.template = item.dataset.template;
+        try { localStorage.setItem('fs-template', pageState.template); } catch (err) {}
+        label.textContent = currentTemplate().name;
+        applyPageFilters();
+        menu.hidden = true;
+        renderTemplateMenu(); // refresh the active state inside menu
+      });
+    });
+    menu.querySelectorAll('[data-tpl-manage]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // In real product this would navigate to the Scoreboard tab.
+        // Prototype: just close the menu — Scoreboard isn't built here.
+        menu.hidden = true;
+      });
+    });
+  }
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.menu').forEach(m => { if (m !== menu) m.hidden = true; });
+    menu.hidden = !menu.hidden;
+  });
+  // Initialize label + menu
+  label.textContent = currentTemplate().name;
+  renderTemplateMenu();
 })();
 
 // Apply initial state (Last week is the default)
@@ -2713,8 +2994,10 @@ function attachPanelClicks() {
   });
 
   // Inline COMPARE button inside the Rig panel: open the Compare panel
-  // and add the current rig to the selection.
-  panelBody.querySelectorAll('.compare-btn').forEach(btn => {
+  // and add the current rig to the selection. The Digital Twin button
+  // shares the .compare-btn style but is inactive for now — exclude it
+  // from this handler.
+  panelBody.querySelectorAll('.compare-btn:not(#rigTwinBtn)').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const top = navStack[navStack.length - 1];
@@ -2803,6 +3086,33 @@ function attachPanelClicks() {
       render();
     });
   }
+
+  // ----- Rig panel: per-rig day-rate edit popover ------------------
+  const rateBtn = panelBody.querySelector('#rigRateEditBtn');
+  const ratePop = panelBody.querySelector('#ratePopover');
+  const rateInp = panelBody.querySelector('#rateInput');
+  const moneyEl = panelBody.querySelector('#rigMoneyVal');
+  const rateTxt = panelBody.querySelector('#rigRateText');
+  if (rateBtn && ratePop && rateInp) {
+    rateBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      ratePop.hidden = !ratePop.hidden;
+      if (!ratePop.hidden) rateInp.focus();
+    });
+    // Prevent clicks INSIDE the popover (or the buttons) from closing it
+    ratePop.addEventListener('click', (e) => e.stopPropagation());
+    rateInp.addEventListener('input', (e) => {
+      const top = navStack[navStack.length - 1];
+      if (!top || top.panelId !== 'rig') return;
+      const idx = parseInt(top.arg, 10);
+      const r = RIGS[idx];
+      const newRate = parseInt(e.target.value, 10);
+      if (isNaN(newRate) || newRate < 0) return;
+      r.dayRate = newRate;
+      if (moneyEl) moneyEl.textContent = fmtMoney(r.daysLost * newRate);
+      if (rateTxt) rateTxt.textContent = fmtMoney(newRate);
+    });
+  }
 }
 
 /* Wire up top-level page clicks */
@@ -2886,10 +3196,6 @@ const PANELS = {
     fn: () => {
       const title = 'Fleet performance change';
       const body = `
-        ${chipSet([
-          { cls: 'active suc', label: '+4 pts', x: true },
-          { cls: 'off', label: 'Last 30 days' },
-        ])}
         <div class="panel-list-head">Top movers</div>
         ${rigCard(RIGS[9], 9)}
         ${rigCard(RIGS[8], 8)}
@@ -2916,10 +3222,6 @@ const PANELS = {
     fn: () => {
       const title = 'Act Now movers';
       const body = `
-        ${chipSet([
-          { cls: 'active', label: 'Act Now', x: true },
-          { cls: 'active acc', label: 'New', x: true },
-        ])}
         <div class="panel-list-head">3 new this week</div>
 
         <div class="p-card s-red" data-panel="rig" data-arg="0">
@@ -2986,14 +3288,9 @@ const PANELS = {
     fn: () => {
       const title = 'Biggest gap';
       const body = `
-        ${chipSet([
-          { cls: 'active warn', label: 'Biggest gap', x: true },
-          { cls: 'active acc',  label: '8.5V', x: true },
-          { cls: 'active acc',  label: 'ROP',  x: true },
-        ])}
         <div class="kpi-hero s-red">
           <div class="kpi-hero-row">
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Days lost</div><div class="kpi-hero-val red">2.4 d</div><div class="kpi-hero-unit">across the fleet</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days on the table</div><div class="kpi-hero-val red">2.4 d</div><div class="kpi-hero-unit">across the fleet</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Avg actual</div><div class="kpi-hero-val">12.4</div><div class="kpi-hero-unit">m/hr</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Goal</div><div class="kpi-hero-val green">22</div><div class="kpi-hero-unit">m/hr</div></div>
           </div>
@@ -3015,10 +3312,6 @@ const PANELS = {
     fn: () => {
       const title = 'Days Saved';
       const body = `
-        ${chipSet([
-          { cls: 'active suc', label: '0.3 d', x: true },
-          { cls: 'off', label: 'Last 30 days' },
-        ])}
         <div class="kpi-hero">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Days saved</div><div class="kpi-hero-val green">0.3 d</div><div class="kpi-hero-unit">this period</div></div>
@@ -3050,10 +3343,6 @@ const PANELS = {
     fn: () => {
       const title = 'Fleet Score';
       const body = `
-        ${chipSet([
-          { cls: 'active acc', label: 'Fleet', x: true },
-          { cls: 'off', label: 'Last 30 days' },
-        ])}
         <div class="kpi-hero">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Score</div><div class="kpi-hero-val">79%</div><div class="kpi-hero-unit">22 active wells</div></div>
@@ -3111,9 +3400,6 @@ const PANELS = {
       const status = pct < 70 ? 'red' : pct < 85 ? 'yellow' : 'green';
       const title = `${arg} section`;
       const body = `
-        ${chipSet([
-          { cls: 'active acc', label: arg, x: true },
-        ])}
         <div class="kpi-hero ${status === 'red' ? 's-red' : ''}">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Section score</div><div class="kpi-hero-val ${status}">${pct}%</div></div>
@@ -3153,15 +3439,33 @@ const PANELS = {
       const rankOf   = sortedDesc.indexOf(r) + 1;
       // Build a stratified KPI list for the rig
       const body = `
-        ${chipSet([
-          { cls: 'active acc', label: r.name, x: true, action: 'rig-remove-rig' },
-          { cls: `active ${r.status === 'red' ? '' : r.status === 'yellow' ? 'warn' : 'suc'}`, label: r.chip, x: true, action: 'rig-remove-status' },
-        ])}
         <div class="kpi-hero ${r.status === 'red' ? 's-red' : ''}">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Score</div><div class="kpi-hero-val ${r.status}">${r.pct}%</div><div class="kpi-hero-unit">${r.dir === 'up' ? '+' : ''}${r.delta} pts vs prev · rank ${rankOf} of ${RIGS.length}</div></div>
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Issues</div><div class="kpi-hero-val">10</div><div class="kpi-hero-unit">across 3 sections</div></div>
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Days lost</div><div class="kpi-hero-val red">2.4 d</div><div class="kpi-hero-unit">if all gaps closed</div></div>
+            <div class="kpi-hero-col">
+              <div class="kpi-hero-label">
+                Days
+                <button class="info-icon" data-tip-type="days-info" aria-label="What this means"><svg><use href="#ic-info"/></svg></button>
+              </div>
+              <div class="kpi-hero-val ${r.status}">${r.daysLost} d</div>
+              <div class="kpi-hero-unit">if all gaps closed</div>
+            </div>
+            <div class="kpi-hero-col">
+              <div class="kpi-hero-label">
+                Money
+                <button class="info-icon" data-tip-type="money-info" aria-label="What this means"><svg><use href="#ic-info"/></svg></button>
+              </div>
+              <div class="kpi-hero-val ${r.status}" id="rigMoneyVal">${fmtMoney(r.daysLost * r.dayRate)}</div>
+              <div class="kpi-hero-unit rate-line">≈ <span id="rigRateText">${fmtMoney(r.dayRate)}</span>/day</div>
+              <span class="rate-edit-wrap">
+                <button class="rate-edit-btn" id="rigRateEditBtn" aria-label="Edit day rate"><svg><use href="#ic-edit"/></svg></button>
+                <div class="rate-popover" id="ratePopover" hidden>
+                  <div class="rate-popover-title">Day rate</div>
+                  <input type="number" class="rate-popover-input" id="rateInput" value="${r.dayRate}" step="1000" min="0">
+                  <div class="rate-popover-hint">Applies to ${r.name} only.<br>Money = days × rate.</div>
+                </div>
+              </span>
+            </div>
           </div>
 
           <!-- vs Fleet / vs Best comparison strip -->
@@ -3188,7 +3492,10 @@ const PANELS = {
             </div>
           </div>
         </div>
-        <button class="compare-btn"><svg><use href="#ic-compare"/></svg>Compare</button>
+        <div class="rig-actions">
+          <button class="compare-btn" id="rigTwinBtn"><svg><use href="#ic-rig-twin"/></svg>Digital Twin</button>
+          <button class="compare-btn"><svg><use href="#ic-compare"/></svg>Compare</button>
+        </div>
         <div class="panel-list-head">8.5V section — 3 issues</div>
         ${kpiCard({ name: 'On Bottom ROP',   group: 'ROP group',     pct: 21, actual: '10.86', goal: '22',  unit: 'm/hr', status: 'red',    target: 'kpi', arg: `${idx}|On Bottom ROP|8.5V` })}
         ${kpiCard({ name: 'Weight to Weight', group: 'Tripping group',pct: 38, actual: '19',    goal: '12',  unit: 'min',  status: 'red',    target: 'kpi', arg: `${idx}|Weight to Weight|8.5V` })}
@@ -3209,8 +3516,10 @@ const PANELS = {
      ------------------------------------------------------------------ */
   'kpi': {
     label: (arg) => {
-      const [, kpi] = (arg || '').split('|');
-      return `<span class="cat">KPI:</span>${kpi || 'KPI'}`;
+      const [idxStr, kpi, section] = (arg || '').split('|');
+      const r = RIGS[parseInt(idxStr || '0', 10)];
+      const ctx = r ? ` <span class="cat">·</span> ${r.name}${section ? ' / ' + section : ''}` : '';
+      return `<span class="cat">KPI:</span>${kpi || 'KPI'}${ctx}`;
     },
     fn: (arg) => {
       const [idxStr, kpi, section] = (arg || '|On Bottom ROP|8.5V').split('|');
@@ -3218,11 +3527,6 @@ const PANELS = {
       const r = RIGS[idx];
       const title = kpi;
       const body = `
-        ${chipSet([
-          { cls: 'active acc', label: r.name, x: true },
-          { cls: 'active acc', label: section, x: true },
-          { cls: 'active acc', label: kpi,     x: true },
-        ])}
         <div class="kpi-hero s-red">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Actual</div><div class="kpi-hero-val">10.86</div><div class="kpi-hero-unit">m/hr</div></div>
@@ -3276,10 +3580,6 @@ const PANELS = {
       const isEmpty = v === 0;
       const title = `${section} · ${kpi}`;
       const body = isEmpty ? `
-        ${chipSet([
-          { cls: 'active suc', label: section, x: true },
-          { cls: 'active acc', label: kpi, x: true },
-        ])}
         <div class="kpi-hero">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Status</div><div class="kpi-hero-val green">On track</div></div>
@@ -3292,13 +3592,9 @@ const PANELS = {
         ${rigCard(RIGS[8], 8)}
         ${rigCard(RIGS[7], 7)}
       ` : `
-        ${chipSet([
-          { cls: `active ${status === 'red' ? '' : 'warn'}`, label: section, x: true },
-          { cls: 'active acc', label: kpi, x: true },
-        ])}
         <div class="kpi-hero ${status === 'red' ? 's-red' : ''}">
           <div class="kpi-hero-row">
-            <div class="kpi-hero-col"><div class="kpi-hero-label">Days lost</div><div class="kpi-hero-val ${status}">${v.toFixed(1)} d</div></div>
+            <div class="kpi-hero-col"><div class="kpi-hero-label">Days on the table</div><div class="kpi-hero-val ${status}">${v.toFixed(1)} d</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Avg actual</div><div class="kpi-hero-val">12.4</div></div>
             <div class="kpi-hero-col"><div class="kpi-hero-label">Goal</div><div class="kpi-hero-val green">22</div></div>
           </div>
@@ -3476,7 +3772,9 @@ const PANELS = {
   'improvement': {
     label: (arg) => {
       const imp = IMPROVEMENTS[parseInt(arg, 10)];
-      return imp ? `<span class="cat">KPI:</span>${imp.kpi}` : 'Improvement';
+      return imp
+        ? `<span class="cat">KPI:</span>${imp.kpi} <span class="cat">·</span> ${imp.rig} / ${imp.section}`
+        : 'Improvement';
     },
     fn: (arg) => {
       const imp = IMPROVEMENTS[parseInt(arg, 10)];
@@ -3503,11 +3801,6 @@ const PANELS = {
       }
       const title = imp.kpi;
       const body = `
-        ${chipSet([
-          { cls: 'active acc', label: imp.rig,     x: true },
-          { cls: 'active acc', label: imp.section, x: true },
-          { cls: `active ${statusChipCls}`, label: status.label, x: true },
-        ])}
         <div class="kpi-hero ${imp.kpiStatus === 'red' ? 's-red' : imp.kpiStatus === 'yellow' ? 's-yellow' : ''}">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col">
@@ -3577,9 +3870,6 @@ const PANELS = {
     fn: () => {
       const title = 'Days on the table';
       const body = `
-        ${chipSet([
-          { cls: 'active acc', label: '7.1 d', x: true },
-        ])}
         <div class="kpi-hero">
           <div class="kpi-hero-row">
             <div class="kpi-hero-col"><div class="kpi-hero-label">Total potential</div><div class="kpi-hero-val" style="color:var(--warning)">7.1 d</div></div>
@@ -3703,6 +3993,30 @@ function buildTipHTML(el) {
         <div class="tip-divider"></div>
         <div class="tip-hint">Click for trend & section breakdown</div>`;
     }
+    case 'days-info':
+      return `
+        <div class="tip-title">Days on the table</div>
+        <div class="tip-row"><span class="label">Time this rig could save if all its current KPI gaps were closed.</span></div>`;
+    case 'money-info':
+      return `
+        <div class="tip-title">Money on the table</div>
+        <div class="tip-row"><span class="label">Recoverable cost = days on the table × this rig's day rate.</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">Click the pencil to change the day rate for this rig.</div>`;
+    case 'fleet-score-info': {
+      const tpl = currentTemplate();
+      const rows = tpl.weightsFull
+        .map(([name, pct]) => `<span>${name}</span><span class="pct">${pct}%</span>`)
+        .join('');
+      return `
+        <div class="tip-title">Fleet Score</div>
+        <div class="tip-row"><span class="label">Weighted average of KPI categories.</span></div>
+        <div class="tip-divider"></div>
+        <div class="tip-row"><span class="label">Current template:</span><span class="value">${tpl.name}</span></div>
+        <div class="tip-weights" style="margin-top:6px;">${rows}</div>
+        <div class="tip-divider"></div>
+        <div class="tip-hint">You can change the template in the dropdown or create your own.</div>`;
+    }
     case 'fleet-section': {
       // arg = "8.5V|62"
       const [sec, pStr] = arg.split('|');
@@ -3769,7 +4083,7 @@ function buildTipHTML(el) {
       }
       return `
         <div class="tip-title">${sec} · ${kpi}</div>
-        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Days lost:</span><span class="value" style="color:${colorFor(st)}">${v.toFixed(1)} d</span></div>
+        <div class="tip-row"><span class="dot" style="background:${colorFor(st)}"></span><span class="label">Days at stake:</span><span class="value" style="color:${colorFor(st)}">${v.toFixed(1)} d</span></div>
         <div class="tip-row"><span class="label">Status:</span><span class="value" style="color:${colorFor(st)}">${statusName(st)}</span></div>
         <div class="tip-divider"></div>
         <div class="tip-hint">Click to see contributing rigs</div>`;
@@ -3813,7 +4127,7 @@ function buildTipHTML(el) {
               <div class="tip-hint">Click to see which rigs and why</div>`;
     case 'news-biggest-gap':
       return `<div class="tip-title">Biggest gap</div>
-              <div class="tip-row"><span class="label">8.5V · ROP:</span><span class="value" style="color:var(--warning)">2.4 d lost</span></div>
+              <div class="tip-row"><span class="label">8.5V · ROP:</span><span class="value" style="color:var(--warning)">2.4 d at stake</span></div>
               <div class="tip-divider"></div>
               <div class="tip-hint">Click to see contributing rigs</div>`;
     case 'news-days-saved':
